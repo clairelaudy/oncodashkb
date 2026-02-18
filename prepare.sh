@@ -65,7 +65,17 @@ rsync --ignore-existing -rpltvz --delete rsync.ebi.ac.uk::pub/databases/opentarg
 rsync --ignore-existing -rpltvz --delete rsync.ebi.ac.uk::pub/databases/opentargets/platform/24.06/output/etl/parquet/molecule .
 rsync --ignore-existing -rpltvz --delete rsync.ebi.ac.uk::pub/databases/opentargets/platform/24.06/output/etl/parquet/evidence .
 cd ..
-echo "## OT — OK" >&2
+echo " | OT — OK" >&2
+
+
+echo " | OmniPath Networks..." >&2
+mkdir -p omnipath_networks
+cd omnipath_networks
+wget https://archive.omnipathdb.org/omnipath_webservice_interactions__latest.tsv.gz
+cd ..
+echo " | OmniPath Networks — OK" >&2
+
+
 
 
 echo "# Check DECIDER data..." >&2
@@ -99,6 +109,20 @@ else
     exit 1
 fi
 # cp -a ../oncodashkb/adapters/Hugo_Symbol_genes.conf .
-echo "# DECIDER — OK" >&2
+echo "DECIDER — OK" >&2
+
+echo "Downloading OmniPath mapping files and custom transformers" >&2
+cd ..
+cd oncodashkb
+mkdir transformers
+cd transformers
+wget -L https://raw.githubusercontent.com/njmmatthieu/omnipath-secondary-adapter/refs/heads/networks_adapter/omnipath_secondary_adapter/adapters/networks.py
+echo "OmniPath Networks custom transformer saved." >&2
+cd ..
+cd adapters
+wget -L https://raw.githubusercontent.com/njmmatthieu/omnipath-secondary-adapter/refs/heads/networks_adapter/omnipath_secondary_adapter/adapters/networks.yaml -O omnipath_networks.yaml
+echo "OmniPath Networks mapping file saved." >&2
+cd ../..
+
 
 echo "# Everything is OK, you can now call: ./make.sh." >&2
