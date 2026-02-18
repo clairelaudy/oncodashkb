@@ -30,6 +30,10 @@ error_codes = {
     "Exception"       : 255,
 }
 
+# Importing OmniPath custom transformer and registering it.
+from oncodashkb.transformers.networks import OmniPath
+ontoweaver.transformer.register(OmniPath)
+
 def progress_read(filename, hint=None, steps=100, estimate_lines=10, **kwargs):
     # df = pd.read_csv(filename, nrows=estimate_lines, **kwargs)
     # estimated_size = len(df.to_csv(index=False))
@@ -129,35 +133,6 @@ def process_GO(name):
     return local_nodes, local_edges
 
 
-def process_OmniPath(name):
-    logging.info(f" | Weave Omnipath {name} data...")
-
-    logging.info(f" |  | Load {name} data...")
-    networks_df = progress_read(asked.networks[0], sep="\t")
-    print(networks_df.info())
-
-    logging.info(f" |  | Read {name} mapping...")
-    try:
-        with open(f"./oncodashkb/adapters/{name}.yaml") as fd:
-            mapping = yaml.full_load(fd)
-    except Exception as e:
-        logging.error(e)
-        sys.exit(error_codes["CannotAccessFile"])
-
-    logging.info(f" |  | Transform {name} data...")
-    adapter = ontoweaver.tabular.extract_table(
-        df=networks_df,
-        config=mapping,
-        affix="suffix",
-        type_affix_sep=":",
-        raise_errors = True
-    )
-    with alive_bar(len(adapter.df), file=sys.stderr) as progress:
-        for n,e in adapter():
-            progress()
-
-    return adapter.nodes, adapter.edges
-
 
 if __name__ == "__main__":
     # TODO add adapter for parquet, one for csv and one that automatically checks filetype.
@@ -187,6 +162,9 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--oncokb", metavar="CSV", nargs="+",
                         help="Extract from an OncoKB CSV file.")
 
+    parser.add_argument("-on", "--omnipath-networks", metavar="TSV", nargs="+",
+                        help="Extract from the Omnipath networks TSV file.")
+    
     parser.add_argument("-c", "--cgi", metavar="CSV", nargs="+",
                         help="Extract from a CGI CSV file.")
 
@@ -220,11 +198,6 @@ if __name__ == "__main__":
     parser.add_argument("-im", "--import-script-run", action="store_true",
                         help=f"If passed, it will call the import scripts created byBioCypher for you. ")
 
-    parser.add_argument("-net", "--networks", metavar="TSV", nargs="+",
-        help="Extract from the Omnipath networks TSV file.", )
-
-    parser.add_argument("-sm", "--small_molecules", metavar="TSV", nargs="+",
-        help="Extract from the Omnipath networks TSV file.", )
 
     levels = {
         "DEBUG": logging.DEBUG,
@@ -264,6 +237,7 @@ if __name__ == "__main__":
         "copy_number_amplifications_local",
         "copy_number_amplifications_external",
         "oncokb",
+        "omnipath_networks",
         "cgi",
         "gene_ontology",
         "gene_ontology_owl",
@@ -424,29 +398,6 @@ if __name__ == "__main__":
         logging.info(f"OK, reverse-wove Gene Ontology: {len(local_nodes)} nodes, {len(local_edges)} edges.")
         logging.info(f"Done adapter {opt_loaded}/{opt_total}")
 
-    ## OmniPath
-
-    ### OmniPath networks
-    if asked.networks:
-        opt_loaded += 1
-        logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
-        local_nodes, local_edges = process_OmniPath("networks")
-        nodes += local_nodes
-        edges += local_edges
-        logging.info(f"OK, wove Networks: {len(nodes)} nodes, {len(edges)} edges.")
-        logging.info(f"Done adapter {opt_loaded}/{opt_total}")
-
-    ### Omnipath small molecules
-    if asked.small_molecules:
-        opt_loaded += 1
-        logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
-        local_nodes, local_edges = process_OmniPath("small_molecules")
-        nodes += local_nodes
-        edges += local_edges
-        logging.info(f"OK, wove small molecules: {len(nodes)} nodes, {len(edges)} edges.")
-        logging.info(f"Done adapter {opt_loaded}/{opt_total}")
-
-
     ###################################################
     # Map the data not requiring special loadings.    #
     ###################################################
@@ -456,6 +407,7 @@ if __name__ == "__main__":
     ### Copy number amplifications
 
     ## Other
+    ### OmniPath Networks 
     ### OncoKB
     ### CGI
 
@@ -465,6 +417,7 @@ if __name__ == "__main__":
         "copy_number_amplifications_local",
         "copy_number_amplifications_external",
         "oncokb",
+        "omnipath_networks",
         "cgi",
     ]
     for name in direct_mappings:

@@ -77,6 +77,11 @@ cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --copy-number-amplifications-local      $data_dir/DECIDER/$data_version/cnas_v2.9_local.csv \
     --copy-number-amplifications-external   $data_dir/DECIDER/$data_version/cnas_v2.9_external.csv  \
     ${weave_args}" # \
+    # --clinical                              $data_dir/DECIDER/$data_version/clinical_export.csv \
+    # --short-mutations-local                 $data_dir/DECIDER/$data_version/snv_local.csv \
+    # --short-mutations-external              $data_dir/DECIDER/$data_version/snv_external.csv  \
+    # --copy-number-amplifications-local      $data_dir/DECIDER/$data_version/cna_local.csv \
+    # --copy-number-amplifications-external   $data_dir/DECIDER/$data_version/cna_external.csv  \
     # --clinical                   $data_dir/DECIDER/$data_version/clinical_export.csv \
     # --copy_number_alterations    $data_dir/DECIDER/$data_version/cna_external.csv \
     # --gene_ontology_genes        $data_dir/DECIDER/$data_version/OncoKB_gene_symbols.conf \
@@ -84,8 +89,6 @@ cmd="uv run python3 ${py_args} $script_dir/weave.py \
     # --gene_ontology              $data_dir/GO/goa_human.gaf.gz \
     # --gene_ontology_owl          $data_dir/GO/go.owl \
     # --gene_ontology_reverse
-    # --single_nucleotide_variants $data_dir/DECIDER/$data_version/snv_external.csv  \
-    #--small_molecules           $data_dir/omnipath_networks/omnipath_webservice_interactions__small_molecule_interactions_filtered.tsv.gz"
 
 echo "Weaving command:" >&2
 echo "$cmd" >&2
