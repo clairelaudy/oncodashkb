@@ -76,6 +76,12 @@ cd ..
 echo " | OmniPath Networks — OK" >&2
 
 
+echo " | Gene Symbol to Ensembl ID" >&2
+mkdir -p HGNC
+cd HGNC
+wget https://storage.googleapis.com/public-download-files/hgnc/tsv/tsv/hgnc_complete_set.txt
+cd ..
+echo " | Gene Symbol to Ensemble ID dataframe — OK" >&2
 
 
 echo "# Check DECIDER data..." >&2
