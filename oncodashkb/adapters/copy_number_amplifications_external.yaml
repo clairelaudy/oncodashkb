@@ -36,7 +36,7 @@ transformers:
         column: oncogenic
         to_property: oncogenic
         for_object: alteration
-    - map:
+    - replace:
         column: mutationEffectDescription
         to_property: mutation_effect_description
         for_object: alteration
@@ -44,7 +44,7 @@ transformers:
         column: citationPMids
         to_property: citation_PM_ids
         for_object: alteration
-    - map:
+    - replace:
         column: geneSummary
         to_property: gene_summary
         for_object: gene
