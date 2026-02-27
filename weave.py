@@ -48,7 +48,7 @@ def progress_read(filename, hint=None, steps=100, estimate_lines=10, **kwargs):
             chunksize = int(math.ceil(nb_lines / steps))
 
         with alive_bar(steps, file=sys.stderr) as progress:
-            for chunk in pd.read_csv(filename, chunksize=chunksize, low_memory=False, **kwargs):
+            for chunk in pd.read_table(filename, chunksize=chunksize, low_memory=False, **kwargs):
                 chunks.append(chunk)
                 progress()
     else:
@@ -56,7 +56,7 @@ def progress_read(filename, hint=None, steps=100, estimate_lines=10, **kwargs):
             chunksize = 100
 
         with alive_bar(file=sys.stderr) as progress:
-            for chunk in pd.read_csv(filename, chunksize=chunksize, low_memory=False, **kwargs):
+            for chunk in pd.read_table(filename, chunksize=chunksize, low_memory=False, **kwargs):
                 chunks.append(chunk)
                 progress()
 
@@ -305,6 +305,64 @@ if __name__ == "__main__":
         edges += local_edges
         logging.info(f"Done adapter {opt_loaded}/{opt_total}")
 
+    if asked.omnipath_networks:
+        opt_loaded += 1
+        logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
+        data_file = asked.omnipath_networks[0]
+        mapping_file = "./oncodashkb/adapters/omnipath_networks.yaml"
+
+        # logging.info(f"Weave OmniPath networks data...")
+        logging.info(f" | Weave `{data_file}:{mapping_file}`...")
+        logging.info(f" |  | Load data `{data_file}`...")
+        table = progress_read(data_file, hint=673)
+
+        translations_file = "./data/HGNC/hgnc_complete_set.txt"
+        translations_table = pd.read_table(translations_file, sep="\t")
+
+        table['source_genesymbol'] = table['source_genesymbol'].str.upper()
+        table['target_genesymbol'] = table['target_genesymbol'].str.upper()
+
+        filtered_table = table[
+            ((table['source_genesymbol'].isin(translations_table.symbol)) | (table.entity_type_source!="protein")) & 
+            ((table['target_genesymbol'].isin(translations_table.symbol)) | (table.entity_type_target!="protein"))
+        ]
+
+        try:
+            with open(mapping_file) as fd:
+                ymapping = yaml.full_load(fd)
+        except Exception as e:
+            logging.error(e)
+            sys.exit(error_codes["CannotAccessFile"])
+
+        logging.info(f" |  | Process {mapping_file}...")
+
+        yparser = ontoweaver.mapping.YamlParser(ymapping)
+        mapping = yparser()
+
+        adapter = ontoweaver.tabular.PandasAdapter(
+            filtered_table,
+            *mapping,
+            type_affix="suffix",
+            type_affix_sep=":",
+            raise_errors = True
+        )
+
+        local_nodes = []
+        local_edges = []
+        with alive_bar(len(filtered_table), file=sys.stderr) as progress:
+            for n,e in adapter():
+                # NOTE: here, n & e are ontoweaver.base.Element, not BioCypher tuples.
+                local_nodes += n
+                local_edges += e
+                progress()
+
+        logging.info(f" |  | OK, wove: {len(local_nodes)} nodes, {len(local_edges)} edges.")
+        nodes += local_nodes
+        edges += local_edges
+        logging.info(f"Done adapter {opt_loaded}/{opt_total}")
+
+    ## DECIDER Patient Clinical Data
+
     ## OpenTarget
 
     ### OpenTargets
@@ -417,7 +475,7 @@ if __name__ == "__main__":
         "copy_number_amplifications_local",
         "copy_number_amplifications_external",
         "oncokb",
-        "omnipath_networks",
+        # "omnipath_networks",
         "cgi",
     ]
     for name in direct_mappings:

@@ -33,10 +33,29 @@ gene status:
     properties:
         data_source: str
 
+source gene:
+    is_a: gene
+    represented_as: node
+    label_in_input: source_gene
+    properties:
+        gene_symbol: str
+        gene_summary: str
+        data_source: str
+
+target gene:
+    is_a: gene
+    represented_as: node
+    label_in_input: target_gene
+    properties:
+        gene_symbol: str
+        gene_summary: str
+        data_source: str
+
 gene:
     represented_as: node
     label_in_input: gene
     properties:
+        gene_symbol: str
         gene_summary: str
         data_source: str
 
@@ -82,7 +101,7 @@ source complex:
     represented_as: node
     input_label: source_complex
     properties:
-        gene_symbol: str
+        name: str
         ncbi_tax_id: str
 
 target complex:
@@ -90,14 +109,14 @@ target complex:
     represented_as: node
     input_label: target_complex
     properties:
-        gene_symbol: str
+        name: str
         ncbi_tax_id: str
 
 macromolecular complex:
     represented_as: node
     input_label: macromolecular_complex 
     properties:
-        gene_symbol: str
+        name: str
         ncbi_tax_id: str
 
 # Micro-RNA
@@ -117,6 +136,7 @@ source protein:
     represented_as: node
     input_label: source_protein
     properties:
+        ensembl_gene_id: str
         gene_symbol: str
         ncbi_tax_id: str
 
@@ -125,6 +145,7 @@ target protein:
     represented_as: node
     input_label: target_protein
     properties:
+        ensembl_gene_id: str
         gene_symbol: str
         ncbi_tax_id: str
 
@@ -132,6 +153,7 @@ protein:
     represented_as: node
     input_label: protein
     properties:
+        ensembl_gene_id: str
         gene_symbol: str
         ncbi_tax_id: str
 
