@@ -3,28 +3,53 @@ row:
         column: patient_id
         to_subject: patient
 transformers:
+    # Nodes
+    ## Sample
     - map:
         column: sample_id
         to_object: sample
         via_relation: patient_carries_sample
+    ## Alteration
     - map:
         column: alteration
         from_subject: sample
         to_object: alteration
         via_relation: sample_carries_alteration
+    ## Gene Stauts
+    - cat_format:
+        columns:
+          - ensembl_id
+          - gene_role
+        from_subject: alteration
+        to_object: gene_status
+        format_string: "{ensembl_id}:{gene_role}"
+        via_relation: alteration_causes_gene_status
+    ## Genes
+    - map:
+        column: ensembl_id
+        from_subject: gene_status
+        to_object: gene
+        via_relation: gene_status_affects_gene
+    # Properties
+    ## Gene Stauts
     - cat_format:
         columns:
           - hugoSymbol
           - gene_role
-        from_subject: alteration
-        to_object: gene_status
+        to_property: gene_symbol_gene_status
+        for_object: gene_status
         format_string: "{hugoSymbol}:{gene_role}"
-        via_relation: alteration_causes_gene_status
+    - map:
+        columns: gene_role
+        to_property: gene_role
+        for_object: gene_status
+    ## Genes
     - map:
         column: hugoSymbol
-        from_subject: gene_status
-        to_object: gene
+        to_property: gene_symbol
+        for_object: gene
         via_relation: gene_status_affects_gene
+    ## Alterations
     - map:
         column: tumorType
         to_property: tumor_type

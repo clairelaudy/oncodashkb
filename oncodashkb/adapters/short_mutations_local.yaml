@@ -28,6 +28,18 @@ transformers:
         column: homogenous
         to_property: homogenous
         for_object: alteration
+    - map:
+        column: refCount
+        to_property: refCount
+        for_object: alteration
+    - map:
+        column: altCount
+        to_property: altCount
+        for_object: alteration
+    - map:
+        column: expressed
+        to_property: expressed
+        for_object: alteration
     - string:
         value: " "
         to_property: edgelabel

@@ -9,6 +9,7 @@ alteration:
     represented_as: node
     label_in_input: alteration
     properties:
+        gene_symbol_alteration: str
         citation_PM_ids: str
         consequence: str
         homogenous: str
@@ -19,6 +20,10 @@ alteration:
         tumor_type: str
         tumor_type_summary: str
         variant_summary: str
+        refCount: int64
+        altCount: int64
+        expressed: bool
+        ensembl_id_alteration: str
 
 disease:
     represented_as: node
@@ -32,6 +37,8 @@ gene status:
     label_in_input: gene_status
     properties:
         data_source: str
+        gene_symbol_gene_status: str
+        gene_role: str
 
 source gene:
     is_a: gene

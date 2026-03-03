@@ -3,31 +3,75 @@ row:
         column: patient_id
         to_subject: patient
 transformers:
+    # Nodes
+    ## Samples
     - map:
         column: sample_id
         to_object: sample
         via_relation: patient_carries_sample
+    ## Alterations
     - cat_format:
         columns:
             - hugoSymbol
             - alteration
         from_subject: sample
         to_object: alteration
-        format_string: "{hugoSymbol}:{alteration}"
         via_relation: sample_carries_alteration
+        format_string: "{hugoSymbol}:{alteration}"
+    ## Gene status
     - cat_format:
         columns:
-          - hugoSymbol
+          - ensembl_id
           - gene_role
         from_subject: alteration
         to_object: gene_status
-        format_string: "{hugoSymbol}:{gene_role}"
+        format_string: "{ensembl_id}:{gene_role}"
         via_relation: alteration_causes_gene_status
+        # column_to_translate: 
+        #     - hugoSymbol
+        # translations_file: data/HGNC/hgnc_complete_set.txt
+        # translate_from: symbol
+        # translate_to: ensembl_gene_id
+        # sep: "\t"
+    ## Genes
     - map:
-        column: hugoSymbol
+        column: ensembl_id
         from_subject: gene_status
         to_object: gene
         via_relation: gene_status_affects_gene
+        # translations_file: data/HGNC/hgnc_complete_set.txt
+        # translate_from: symbol
+        # translate_to: ensembl_gene_id
+        # sep: "\t"
+    # Properties
+    ## Alterations
+    - cat_format:
+        columns:
+            - ensembl_id
+            - alteration
+        to_property: ensembl_id_alteration
+        for_object: alteration
+        format_string: "{ensembl_id}:{alteration}"
+        # column_to_translate: 
+        #     - hugoSymbol
+        # translations_file: data/HGNC/hgnc_complete_set.txt
+        # translate_from: symbol
+        # translate_to: ensembl_gene_id
+        # sep: "\t"
+    ## Gene status
+    - cat_format:
+        columns:
+            - hugoSymbol
+            - gene_role
+        to_property: gene_symbol_gene_status
+        for_object: gene_status
+        format_string: "{hugoSymbol}:{gene_role}"
+    ## Genes
+    - map: 
+        column: hugoSymbol
+        to_property: gene_symbol
+        for_object: gene
+    ## Alterations
     - map:
         column: tumorType
         to_property: tumor_type
