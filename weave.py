@@ -33,6 +33,8 @@ error_codes = {
 # Importing OmniPath custom transformer and registering it.
 from oncodashkb.transformers.networks import OmniPath_directed
 ontoweaver.transformer.register(OmniPath_directed)
+from oncodashkb.transformers.specific_translate_transformers import translate_sample_ids
+ontoweaver.transformer.register(translate_sample_ids)
 
 def progress_read(filename, hint=None, steps=100, estimate_lines=10, **kwargs):
     # df = pd.read_csv(filename, nrows=estimate_lines, **kwargs)
