@@ -71,13 +71,13 @@ echo "Weave data..." >&2
 
 cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --config $CONFIG \
-    --clinical                              $data_dir/DECIDER/$data_version/clinical_export_2024-11-13.csv \
-    --short-mutations-local                 $data_dir/DECIDER/$data_version/short_mutations_v4.10_local.csv \
+    --short-mutations-external              $data_dir/DECIDER/$data_version/short_mutations_external.csv  \
     --short-mutations-external              $data_dir/DECIDER/$data_version/short_mutations_v4.10_external.csv  \
-    --copy-number-amplifications-local      $data_dir/DECIDER/$data_version/cnas_v2.9_local.csv \
-    --copy-number-amplifications-external   $data_dir/DECIDER/$data_version/cnas_v2.9_external.csv  \
+    --copy-number-amplifications-local      $data_dir/DECIDER/$data_version/cnas_local.csv \
+    --copy-number-amplifications-external   $data_dir/DECIDER/$data_version/cnas_external.csv  \
     ${weave_args}" # \
-    # --clinical                              $data_dir/DECIDER/$data_version/clinical_export_2024-11-13.csv \
+    # --omnipath-networks                     $data_dir/omnipath_networks/subset_omnipath_networks_different_type_entity_type_source_and_entity_type_target_shorter.tsv \
+    # --clinical                              $data_dir/DECIDER/clinical/clinical_export.xlsx \
     # --gene_ontology_genes        $data_dir/DECIDER/$data_version/OncoKB_gene_symbols.conf \
     # --oncokb                     $data_dir/DECIDER/$data_version/treatments.csv \
     # --gene_ontology              $data_dir/GO/goa_human.gaf.gz \
