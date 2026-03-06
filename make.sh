@@ -17,7 +17,7 @@ set -e
 set -o pipefail
 
 data_dir="data"
-data_version="$1"
+# data_version="$1"
 script_dir="$(dirname $0)"
 
 case "$(uname)" in
@@ -43,12 +43,19 @@ else
     NEO_USER=""
 fi
 
-py_args="-O" # Optimize = remove asserts and optimize bytecode.
-weave_args="-v INFO" # Default, for having clean progress bars.
-if [[ "$2" == "debug" ]] ; then
+# py_args="-O" # Optimize = remove asserts and optimize bytecode.
+# weave_args="-v INFO" # Default, for having clean progress bars.
+# if [[ "$2" == "debug" ]] ; then
+#     echo "DEBUG MODE" >&2
+#     py_args=""
+#     weave_args="-v DEBUG"
+# fi
+export PYTHONOPTIMIZE="2"  # Optimize = remove asserts and optimize bytecode.
+weave_args="--log-level WARNING"
+if [[ "$1" == "debug" ]] ; then
     echo "DEBUG MODE" >&2
-    py_args=""
-    weave_args="-v DEBUG"
+    export PYTHONOPTIMIZE=""
+    weave_args="--log-level INFO --debug"
 fi
 
 
@@ -71,8 +78,8 @@ echo "Weave data..." >&2
 
 cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --config $CONFIG \
+    --short-mutations-local             $data_dir/DECIDER/$data_version/short_mutations_local.csv  \
     --short-mutations-external              $data_dir/DECIDER/$data_version/short_mutations_external.csv  \
-    --short-mutations-external              $data_dir/DECIDER/$data_version/short_mutations_v4.10_external.csv  \
     --copy-number-amplifications-local      $data_dir/DECIDER/$data_version/cnas_local.csv \
     --copy-number-amplifications-external   $data_dir/DECIDER/$data_version/cnas_external.csv  \
     ${weave_args}" # \
@@ -83,6 +90,19 @@ cmd="uv run python3 ${py_args} $script_dir/weave.py \
     # --gene_ontology              $data_dir/GO/goa_human.gaf.gz \
     # --gene_ontology_owl          $data_dir/GO/go.owl \
     # --gene_ontology_reverse
+
+cmd="uv run ontoweave  \
+     --biocypher-config config/biocypher_config.yaml \
+     --biocypher-schema config/schema_config.yaml \
+     --register oncodashkb/transformers/ot_transformers.py \
+     ${weave_args} \
+     ${data_dir}/OT/drug_molecule/*.parquet:oncodashkb/adapters/ot_drug_molecule.yaml \
+     ${data_dir}/OT/drug_mechanism_of_action/*.parquet:oncodashkb/adapters/ot_drug_mechanism_of_action.yaml \
+     ${data_dir}/OT/target/*.parquet:oncodashkb/adapters/ot_target.yaml \
+     "
+    #  --auto-schema config/extended_schema.yaml \
+    #  --auto-schema-overwrite \
+    #  --debug \
 
 echo "Weaving command:" >&2
 echo "$cmd" >&2

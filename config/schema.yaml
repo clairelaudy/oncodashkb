@@ -65,6 +65,9 @@ gene:
         gene_symbol: str
         gene_summary: str
         data_source: str
+        gene_summary: str # OpenTargets
+        hugoSymbol: str
+        name: str
 
 patient:
     represented_as: node
@@ -84,12 +87,46 @@ sample:
 
 # Drug
 
+row_drug:
+    is_a: drug 
+    represented_as: node
+    label_in_input : row_drug
+    properties:
+        canonicalSmiles: str
+        inchiKey: str
+        drugType: str
+        blackBoxWarning: bool
+        drug_name: str
+        yearOfFirstapproval: str
+        maximumClinicalTrialPhase: str
+        hasBeenWithdrawn: bool
+        isApproved: bool
+        tradeName: str
+        synonym: str
+        references: str
+        description: str
+        data_source: str
+
 drug:
     represented_as: node
     input_label: drug # final_type node type
     properties:
         name: str
         ncbi_tax_id: str
+        canonicalSmiles: str
+        inchiKey: str
+        drugType: str
+        blackBoxWarning: bool
+        drug_name: str
+        yearOfFirstapproval: str
+        maximumClinicalTrialPhase: str
+        hasBeenWithdrawn: bool
+        isApproved: bool
+        tradeName: str
+        synonym: str
+        references: str
+        description: str
+        data_source: str
 
 # Long non Coding - RNA
 
@@ -146,6 +183,7 @@ source protein:
         ensembl_gene_id: str
         gene_symbol: str
         ncbi_tax_id: str
+        data_source: str
 
 target protein:
     is_a: protein
@@ -155,6 +193,7 @@ target protein:
         ensembl_gene_id: str
         gene_symbol: str
         ncbi_tax_id: str
+        data_source: str
 
 protein:
     represented_as: node
@@ -163,6 +202,7 @@ protein:
         ensembl_gene_id: str
         gene_symbol: str
         ncbi_tax_id: str
+        data_source: str
 
 ########################
 # EDGES
@@ -372,7 +412,7 @@ stimulation:
         dorothea_coexp: bool
         dorothea_level: str
         type: str
-        curation_effort: int
+        curation_effort: str
         extra_attrs: str
         evidences: str
 
@@ -405,10 +445,20 @@ inhibition:
         dorothea_coexp: bool
         dorothea_level: str
         type: str
-        curation_effort: int
+        curation_effort: str
         extra_attrs: str
         evidences: str
 
 transcript to gene relationship:
+    # is_a: transcript to gene relationship
     represented_as: edge
     input_label: transcript_to_gene_relationship
+    properties:
+        data_source: str
+
+drug has target:
+    is_a: drug to gene association
+    represented_as: edge
+    label_in_input: drug_has_target
+    properties:
+        data_source: str

@@ -19,3 +19,8 @@ build
 
 oncodashkb/transformers/networks.py
 oncodashkb/adapters/omnipath_networks.yaml
+
+oncodashkb/transformers/ot_transformers.py
+oncodashkb/adapters/ot_target.yaml
+oncodashkb/adapters/ot_drug_mechanism_of_action.yaml
+oncodashkb/adapters/ot_drug_molecule.yaml

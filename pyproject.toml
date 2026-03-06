@@ -32,3 +32,6 @@ dependencies = [
 dev = [
   "pytest>=8.4.1",
 ]
+
+[tool.uv.sources]
+ontoweaver = { git = "https://github.com/njmmatthieu/ontoweaver.git", branch = "split_replace"}
