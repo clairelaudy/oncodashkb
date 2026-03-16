@@ -1,33 +1,91 @@
 row:
-    map:
+    translate:
         column: patient_id
         to_subject: patient
+        translations_file: ./data/DECIDER/clinical/clinical_export.xlsx
+        translate_from: Patient card::Patient cohort code_Patient Card
+        translate_to: Patient card::Publication code
+        index_col: 0
+        usecols: [0,1,2]
 transformers:
-    - map:
+    # Nodes
+    ## Samples
+    - translate_sample_ids :
         column: sample_id
         to_object: sample
         via_relation: patient_carries_sample
+        translations_file: ./data/DECIDER/clinical/clinical_export.xlsx
+        translate_from: Patient card::Patient cohort code_Patient Card
+        translate_to: Patient card::Publication code
+        index_col: 0
+        usecols: [0,1,2]
+    # - map :
+    #     column: sample_id
+    #     to_object: sample
+    #     via_relation: patient_carries_sample
+    ## Alterations
     - cat_format:
         columns:
             - hugoSymbol
             - alteration
         from_subject: sample
         to_object: alteration
-        format_string: "{hugoSymbol}:{alteration}"
         via_relation: sample_carries_alteration
+        format_string: "{hugoSymbol}:{alteration}"
+    ## Gene status
     - cat_format:
         columns:
-          - hugoSymbol
+          - ensembl_id
           - gene_role
         from_subject: alteration
         to_object: gene_status
-        format_string: "{hugoSymbol}:{gene_role}"
+        format_string: "{ensembl_id}:{gene_role}"
         via_relation: alteration_causes_gene_status
+        # column_to_translate: 
+        #     - hugoSymbol
+        # translations_file: data/HGNC/hgnc_complete_set.txt
+        # translate_from: symbol
+        # translate_to: ensembl_gene_id
+        # sep: "\t"
+    ## Genes
     - map:
-        column: hugoSymbol
+        column: ensembl_id
         from_subject: gene_status
         to_object: gene
         via_relation: gene_status_affects_gene
+        # translations_file: data/HGNC/hgnc_complete_set.txt
+        # translate_from: symbol
+        # translate_to: ensembl_gene_id
+        # sep: "\t"
+    # Properties
+    ## Alterations
+    - cat_format:
+        columns:
+            - ensembl_id
+            - alteration
+        to_property: ensembl_id_alteration
+        for_object: alteration
+        format_string: "{ensembl_id}:{alteration}"
+        # column_to_translate: 
+        #     - hugoSymbol
+        # translations_file: data/HGNC/hgnc_complete_set.txt
+        # translate_from: symbol
+        # translate_to: ensembl_gene_id
+        # sep: "\t"
+    ## Gene status
+    - cat_format:
+        columns:
+            - hugoSymbol
+            - gene_role
+        to_property: gene_symbol_gene_status
+        for_object: gene_status
+        format_string: "{hugoSymbol}:{gene_role}"
+    ## Genes
+    - map: 
+        column: hugoSymbol
+        to_property: gene_symbol
+        for_object: gene
+    ## Alterations
     - map:
         column: tumorType
         to_property: tumor_type
@@ -36,7 +94,7 @@ transformers:
         column: oncogenic
         to_property: oncogenic
         for_object: alteration
-    - map:
+    - replace:
         column: mutationEffectDescription
         to_property: mutation_effect_description
         for_object: alteration
@@ -44,7 +102,7 @@ transformers:
         column: citationPMids
         to_property: citation_PM_ids
         for_object: alteration
-    - map:
+    - replace:
         column: geneSummary
         to_property: gene_summary
         for_object: gene

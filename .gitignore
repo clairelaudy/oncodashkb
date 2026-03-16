@@ -16,3 +16,11 @@ poetry.lock
 uv.lock
 *.egg-info
 build
+
+oncodashkb/transformers/networks.py
+oncodashkb/adapters/omnipath_networks.yaml
+
+oncodashkb/transformers/ot_transformers.py
+oncodashkb/adapters/open_targets_target.yaml
+oncodashkb/adapters/open_targets_drug_mechanism_of_action.yaml
+oncodashkb/adapters/open_targets_drug_molecule.yaml

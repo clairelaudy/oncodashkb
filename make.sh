@@ -8,6 +8,9 @@ fi
 CONFIG="config/neo4j.yaml"
 if [[ -z "$2" ]] ; then
     echo "Selecting Neo4j output configuration." >&2
+elif [[ "$2" == "debug" ]] ; then
+    echo "ERROR, if DEBUG MODE, usage: $0 <DECIDER_data_version> <config> debug" >&2
+    exit 2
 else
     echo "Selecting output configuration: $2" >&2
     CONFIG="$2"
@@ -45,7 +48,7 @@ fi
 
 py_args="-O" # Optimize = remove asserts and optimize bytecode.
 weave_args="-v INFO" # Default, for having clean progress bars.
-if [[ "$2" == "debug" ]] ; then
+if [[ "$3" == "debug" ]] ; then
     echo "DEBUG MODE" >&2
     py_args=""
     weave_args="-v DEBUG"
@@ -71,21 +74,21 @@ echo "Weave data..." >&2
 
 cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --config $CONFIG \
-    --clinical                              $data_dir/DECIDER/$data_version/clinical_export_2024-11-13.csv \
-    --short-mutations-local                 $data_dir/DECIDER/$data_version/short_mutations_v4.10_local.csv \
-    --short-mutations-external              $data_dir/DECIDER/$data_version/short_mutations_v4.10_external.csv  \
-    --copy-number-amplifications-local      $data_dir/DECIDER/$data_version/cnas_v2.9_local.csv \
-    --copy-number-amplifications-external   $data_dir/DECIDER/$data_version/cnas_v2.9_external.csv  \
+    --short-mutations-local             $data_dir/DECIDER/$data_version/short_mutations_local.csv  \
+    --short-mutations-external              $data_dir/DECIDER/$data_version/short_mutations_external.csv  \
+    --copy-number-amplifications-local      $data_dir/DECIDER/$data_version/cnas_local.csv \
+    --copy-number-amplifications-external   $data_dir/DECIDER/$data_version/cnas_external.csv  \
+    --omnipath-networks                     $data_dir/omnipath_networks/omnipath_webservice_interactions__latest.tsv.gz \
+    --open-targets-drug-molecule              $data_dir/OT/drug_molecule/
+    --open-targets-drug_mechanism_of_action   $data_dir/OT/drug_mechanism_of_action/
+    --open-targets-target                     $data_dir/OT/target/
     ${weave_args}" # \
-    # --clinical                   $data_dir/DECIDER/$data_version/clinical_export.csv \
-    # --copy_number_alterations    $data_dir/DECIDER/$data_version/cna_external.csv \
+    # --clinical                              $data_dir/DECIDER/clinical/clinical_export.xlsx \
     # --gene_ontology_genes        $data_dir/DECIDER/$data_version/OncoKB_gene_symbols.conf \
     # --oncokb                     $data_dir/DECIDER/$data_version/treatments.csv \
     # --gene_ontology              $data_dir/GO/goa_human.gaf.gz \
     # --gene_ontology_owl          $data_dir/GO/go.owl \
     # --gene_ontology_reverse
-    # --single_nucleotide_variants $data_dir/DECIDER/$data_version/snv_external.csv  \
-    #--small_molecules           $data_dir/omnipath_networks/omnipath_webservice_interactions__small_molecule_interactions_filtered.tsv.gz"
 
 echo "Weaving command:" >&2
 echo "$cmd" >&2
@@ -93,7 +96,7 @@ echo "$cmd" >&2
 $cmd > tmp.sh
 
 
-if [[ "$2" == "config/neo4j.yaml" ]] ; then
+if [[ "$CONFIG" == "config/neo4j.yaml" ]] ; then
     echo "Run import script..." >&2
     chmod a+x  $(cat tmp.sh)
     ${NEO_USER} $SHELL $(cat tmp.sh)

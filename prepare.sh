@@ -57,15 +57,37 @@ cd ..
 echo "## GO — OK" >&2
 
 
-echo "## Open Targets..." >&2
+echo " | Open Targets..." >&2
+rsync_cmd="rsync --ignore-existing -rpltvz --delete"
+ot_version="25.12"
 mkdir -p OT
 cd OT
-rsync --ignore-existing -rpltvz --delete rsync.ebi.ac.uk::pub/databases/opentargets/platform/24.06/output/etl/parquet/targets  .
-rsync --ignore-existing -rpltvz --delete rsync.ebi.ac.uk::pub/databases/opentargets/platform/24.06/output/etl/parquet/diseases .
-rsync --ignore-existing -rpltvz --delete rsync.ebi.ac.uk::pub/databases/opentargets/platform/24.06/output/etl/parquet/molecule .
-rsync --ignore-existing -rpltvz --delete rsync.ebi.ac.uk::pub/databases/opentargets/platform/24.06/output/etl/parquet/evidence .
+echo " | | Target..." >&2
+$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/target .
+
+echo " | | Drug-Mechanism..." >&2
+$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/drug_mechanism_of_action .
+
+echo " | | Drug-Molecule..." >&2
+$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/drug_molecule .
+
+echo " | OK" >&2
+
+
+echo " | OmniPath Networks..." >&2
+mkdir -p omnipath_networks
+cd omnipath_networks
+wget https://archive.omnipathdb.org/omnipath_webservice_interactions__latest.tsv.gz
 cd ..
-echo "## OT — OK" >&2
+echo " | OmniPath Networks — OK" >&2
+
+
+echo " | Gene Symbol to Ensembl ID" >&2
+mkdir -p HGNC
+cd HGNC
+wget https://storage.googleapis.com/public-download-files/hgnc/tsv/tsv/hgnc_complete_set.txt
+cd ..
+echo " | Gene Symbol to Ensemble ID dataframe — OK" >&2
 
 
 echo "# Check DECIDER data..." >&2
@@ -99,6 +121,52 @@ else
     exit 1
 fi
 # cp -a ../oncodashkb/adapters/Hugo_Symbol_genes.conf .
-echo "# DECIDER — OK" >&2
+echo "DECIDER — OK" >&2
 
-echo "# Everything is OK, you can now call: ./make.sh." >&2
+echo "Downloading OmniPath mapping files and custom transformers" >&2
+cd ..
+cd oncodashkb
+mkdir transformers
+cd transformers
+wget -L https://raw.githubusercontent.com/njmmatthieu/omnipath-secondary-adapter/refs/heads/directed/src/omnipath_secondary_adapter/transformers/networks.py -O networks.py
+echo "OmniPath Networks custom transformer saved." >&2
+cd ..
+cd adapters
+wget -L https://raw.githubusercontent.com/njmmatthieu/omnipath-secondary-adapter/refs/heads/directed/src/omnipath_secondary_adapter/adapters/networks.yaml -O omnipath_networks.yaml
+echo "OmniPath Networks mapping file saved." >&2
+cd ../..
+
+echo "Downloading OpenTargets mapping files and custom transformers" >&2
+cd ..
+cd oncodashkb
+cd transformers
+wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/ot-transformers.py -O ot_transformers.py
+echo "Open Targets custom transformers saved." >&2
+cd ..
+cd adapters
+wget -L raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/target.yaml -O open_targets_target.yaml
+echo "Open Targets targets mapping file saved." >&2
+wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_mechanism_of_action.yaml -O open_targets_drug_mechanism_of_action.yaml
+echo "Open Targets mechanisms of action mapping file saved." >&2
+wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_molecule.yaml -O open_targets_drug_molecule.yaml
+echo "Open Targets Drug mapping file saved." >&2
+cd ../..
+
+echo "Downloading OpenTargets mapping files and custom transformers" >&2
+cd ..
+cd oncodashkb
+cd transformers
+wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/ot-transformers.py -O ot_transformers.py
+echo "Open Targets custom transformers saved." >&2
+cd ..
+cd adapters
+wget -L raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/target.yaml -O ot_target.yaml
+echo "Open Targets targets mapping file saved." >&2
+wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_mechanism_of_action.yaml -O ot_drug_mechanism_of_action.yaml
+echo "Open Targets mechanisms of action mapping file saved." >&2
+wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_molecule.yaml -O ot_drug_molecule.yaml
+echo "Open Targets Drug mapping file saved." >&2
+cd ../..
+
+
+echo "Everything is OK, you can now call: ./make.sh." >&2
