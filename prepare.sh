@@ -144,11 +144,11 @@ wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads
 echo "Open Targets custom transformers saved." >&2
 cd ..
 cd adapters
-wget -L raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/target.yaml -O ot_target.yaml
+wget -L raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/target.yaml -O open_targets_target.yaml
 echo "Open Targets targets mapping file saved." >&2
-wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_mechanism_of_action.yaml -O ot_drug_mechanism_of_action.yaml
+wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_mechanism_of_action.yaml -O open_targets_drug_mechanism_of_action.yaml
 echo "Open Targets mechanisms of action mapping file saved." >&2
-wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_molecule.yaml -O ot_drug_molecule.yaml
+wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_molecule.yaml -O open_targets_drug_molecule.yaml
 echo "Open Targets Drug mapping file saved." >&2
 cd ../..
 
