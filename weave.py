@@ -85,7 +85,6 @@ def process_OT(directory, name):
     if os.path.isdir(directory):
         parquet_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.parquet')]
         logging.info(f" |  | Concatenating {len(parquet_files)} parquet files...")
-        # df = pd.concat([pd.read_parquet(file, columns=columns) for file in parquet_files])
         df = pd.concat([pd.read_parquet(file) for file in parquet_files])
         
         logging.debug(f"COLUMNS: {df.columns}")
@@ -97,9 +96,6 @@ def process_OT(directory, name):
         except Exception as e:
             logging.error(e)
             sys.exit(error_codes["CannotAccessFile"])
-
-        # logging.info(f" |  | Transform {name} data...")
-        # manager = manager_t(df, conf, raise_errors = True)
 
         # with alive_bar(len(df), file=sys.stderr) as progress:
         #     for n,e in manager():
