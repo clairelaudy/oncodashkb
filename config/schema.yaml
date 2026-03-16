@@ -302,10 +302,6 @@ gene status affects gene:
 
 
 ### GO -- TO BE FIXED
-# annotation: 
-#     is_a: named thing
-#     represented_as: node
-#     label_in_input: annotation
 
 biological process:
     is_a: named thing
@@ -313,20 +309,6 @@ biological process:
     label_in_input: biological_process
     properties:
         data_source: str
-
-# annotation for gene: 
-#     is_a: association
-#     represented_as: edge
-#     label_in_input: annotation_for_gene
-#     source: annotation
-#     target: gene
-
-# involved in: 
-#     is_a: association
-#     represented_as: edge
-#     label_in_input: involved_in
-#     source: annotation
-#     target: biological process
 
 gene to biological process:
     is_a: association
@@ -345,8 +327,9 @@ biological process to gene:
     source: biological process
     target: gene
     properties:
-        # edglelabel: str
         data_source: str
+
+### FUNCTIONAL PROTEIN PROTEIN INTERACTIONS
 
 undirected molecular interaction:
     is_a: pairwise molecular interaction
@@ -447,12 +430,16 @@ inhibition:
         extra_attrs: str
         evidences: str
 
+### TRASNCRIPT TO GENE RELATIONSHIP
+
 transcript to gene relationship:
     # is_a: transcript to gene relationship
     represented_as: edge
     input_label: transcript_to_gene_relationship
     properties:
         data_source: str
+
+### DRUG HAS TARGET
 
 drug has target:
     is_a: drug to gene association
