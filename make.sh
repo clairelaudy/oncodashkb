@@ -8,6 +8,9 @@ fi
 CONFIG="config/neo4j.yaml"
 if [[ -z "$2" ]] ; then
     echo "Selecting Neo4j output configuration." >&2
+elif [[ "$2" == "debug" ]] ; then
+    echo "ERROR, if DEBUG MODE, usage: $0 <DECIDER_data_version> <config> debug" >&2
+    exit 2
 else
     echo "Selecting output configuration: $2" >&2
     CONFIG="$2"
@@ -45,7 +48,7 @@ fi
 
 py_args="-O" # Optimize = remove asserts and optimize bytecode.
 weave_args="-v INFO" # Default, for having clean progress bars.
-if [[ "$2" == "debug" ]] ; then
+if [[ "$3" == "debug" ]] ; then
     echo "DEBUG MODE" >&2
     py_args=""
     weave_args="-v DEBUG"
@@ -93,7 +96,7 @@ echo "$cmd" >&2
 $cmd > tmp.sh
 
 
-if [[ "$2" == "config/neo4j.yaml" ]] ; then
+if [[ "$CONFIG" == "config/neo4j.yaml" ]] ; then
     echo "Run import script..." >&2
     chmod a+x  $(cat tmp.sh)
     ${NEO_USER} $SHELL $(cat tmp.sh)
