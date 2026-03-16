@@ -90,11 +90,7 @@ cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --open-targets-target                   $data_dir/OT/target/
     ${weave_args}" # \
     # --clinical                              $data_dir/DECIDER/clinical/clinical_export.xlsx \
-    # --gene_ontology_genes        $data_dir/DECIDER/$data_version/OncoKB_gene_symbols.conf \
     # --oncokb                     $data_dir/DECIDER/$data_version/treatments.csv \
-    # --gene_ontology              $data_dir/GO/goa_human.gaf.gz \
-    # --gene_ontology_owl          $data_dir/GO/go.owl \
-    # --gene_ontology_reverse
 
 
 echo "Weaving command:" >&2
