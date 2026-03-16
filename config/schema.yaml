@@ -63,11 +63,9 @@ gene:
     label_in_input: gene
     properties:
         gene_symbol: str
-        gene_summary: str
+        gene_summary: str # DECIDER
+        name: str # OT
         data_source: str
-        gene_summary: str # OpenTargets
-        hugoSymbol: str
-        name: str
 
 patient:
     represented_as: node

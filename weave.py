@@ -14,7 +14,7 @@ import pandas as pd
 import biocypher
 
 import ontoweaver
-import oncodashkb.adapters as od
+# import oncodashkb.adapters as od
 from alive_progress import alive_bar
 
 error_codes = {
@@ -33,8 +33,15 @@ error_codes = {
 # Importing OmniPath custom transformer and registering it.
 from oncodashkb.transformers.networks import OmniPath_directed
 ontoweaver.transformer.register(OmniPath_directed)
+
+# Importing custom transformer for translating sample ids with publication code and registering it.
 from oncodashkb.transformers.specific_translate_transformers import translate_sample_ids
 ontoweaver.transformer.register(translate_sample_ids)
+
+# Importing OpenTargets custom transformer and registering it.
+from oncodashkb.transformers.ot_transformers import access_proteins, urls_to_prop
+ontoweaver.transformer.register(access_proteins)
+ontoweaver.transformer.register(urls_to_prop)
 
 def progress_read(filename, hint=None, steps=100, estimate_lines=10, **kwargs):
     # df = pd.read_csv(filename, nrows=estimate_lines, **kwargs)
@@ -67,41 +74,64 @@ def progress_read(filename, hint=None, steps=100, estimate_lines=10, **kwargs):
     return df
 
 
-def process_OT(bc, directory, columns, name, manager_t):
+def process_OT(directory, name):
     logging.info(f" | Weave Open Targets {name}...")
 
     conf_filename = f"oncodashkb/adapters/{name}.yaml"
-    nodes = []
-    edges = []
+
+    logging.debug(f"DIRECTORY {directory}")
 
     #TODO check if reading directory is necessary, and the .* option.
     if os.path.isdir(directory):
         parquet_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.parquet')]
         logging.info(f" |  | Concatenating {len(parquet_files)} parquet files...")
-        df = pd.concat([pd.read_parquet(file, columns=columns) for file in parquet_files])
+        # df = pd.concat([pd.read_parquet(file, columns=columns) for file in parquet_files])
+        df = pd.concat([pd.read_parquet(file) for file in parquet_files])
+        
+        logging.debug(f"COLUMNS: {df.columns}")
 
         logging.info(f" |  | Read {name} mapping...")
         try:
             with open(conf_filename) as fd:
-                conf = yaml.full_load(fd)
+                ymapping = yaml.full_load(fd)
         except Exception as e:
             logging.error(e)
             sys.exit(error_codes["CannotAccessFile"])
 
-        logging.info(f" |  | Transform {name} data...")
-        manager = manager_t(df, conf, raise_errors = True)
+        # logging.info(f" |  | Transform {name} data...")
+        # manager = manager_t(df, conf, raise_errors = True)
 
+        # with alive_bar(len(df), file=sys.stderr) as progress:
+        #     for n,e in manager():
+        #         progress()
+
+        logging.info(f" |  | Process {conf_filename}...")
+
+        yparser = ontoweaver.mapping.YamlParser(ymapping)
+        mapping = yparser()
+
+        adapter = ontoweaver.tabular.PandasAdapter(
+            df,
+            *mapping,
+            type_affix="suffix",
+            type_affix_sep=":",
+            raise_errors = True
+        )
+
+        local_nodes = []
+        local_edges = []
         with alive_bar(len(df), file=sys.stderr) as progress:
-            for n,e in manager():
+            for n,e in adapter():
+                # NOTE: here, n & e are ontoweaver.base.Element, not BioCypher tuples.
+                local_nodes += n
+                local_edges += e
                 progress()
 
-        nodes += manager.nodes
-        edges += manager.edges
     else:
         logging.error(f"`{directory}` is not a directory. I need a directory to be able to load the parquet files within it.")
         sys.exit(error_codes["FileError"])
 
-    return nodes, edges
+    return local_nodes, local_edges
 
 
 def process_GO(name):
@@ -167,6 +197,15 @@ if __name__ == "__main__":
     parser.add_argument("-on", "--omnipath-networks", metavar="TSV", nargs="+",
                         help="Extract from the Omnipath networks TSV file.")
     
+    parser.add_argument("-ott", "--open-targets-target", metavar="PARQUET", nargs="+",
+                        help="Extract parquet files containing targets from the given directory.")
+
+    parser.add_argument("-otmao", "--open-targets-drug_mechanism_of_action", metavar="PARQUET", nargs="+",
+                        help="Extract parquet files containing evidences from the given directory.")
+
+    parser.add_argument("-otdm", "--open-targets-drug-molecule", metavar="PARQUET", nargs="+",
+                        help="Extract parquet files containing molecule from the given directory.")
+    
     parser.add_argument("-c", "--cgi", metavar="CSV", nargs="+",
                         help="Extract from a CGI CSV file.")
 
@@ -181,18 +220,6 @@ if __name__ == "__main__":
 
     parser.add_argument("-r", "--gene-ontology-reverse", action='store_true',
                         help="Extract from a Gene_Ontology_Annotation GAF file.")
-
-    parser.add_argument("-t", "--open-targets", metavar="PARQUET", nargs="+",
-                        help="Extract parquet files containing targets from the given directory.")
-
-    parser.add_argument("-e", "--open-targets-evidences", metavar="PARQUET", nargs="+",
-                        help="Extract parquet files containing evidences from the given directory.")
-
-    parser.add_argument("-d", "--open-targets-drugs", metavar="PARQUET", nargs="+",
-                        help="Extract parquet files containing molecule from the given directory.")
-
-    parser.add_argument("-p", "--open-targets-diseases", metavar="PARQUET", nargs="+",
-                        help="Extract parquet files containing diseases from the given directory.")
 
     parser.add_argument("-s", "--separator", metavar="STRING", default=", ",
                         help="Separator in exported data files.")
@@ -240,15 +267,14 @@ if __name__ == "__main__":
         "copy_number_amplifications_external",
         "oncokb",
         "omnipath_networks",
+        "open_targets_target",
+        "open_targets_drug_mechanism_of_action",
+        "open_targets_drug_molecule",
         "cgi",
         "gene_ontology",
         "gene_ontology_owl",
         "gene_ontology_genes",
         "gene_ontology_reverse",
-        "open_targets",
-        "open_targets_evidences",
-        "open_targets_drugs",
-        "open_targets_diseases",
     ]
     opt_total = 0
     for opt in all_options:
@@ -316,7 +342,7 @@ if __name__ == "__main__":
         # logging.info(f"Weave OmniPath networks data...")
         logging.info(f" | Weave `{data_file}:{mapping_file}`...")
         logging.info(f" |  | Load data `{data_file}`...")
-        table = progress_read(data_file, hint=673)
+        table = progress_read(data_file, hint=890699)
 
         translations_file = "./data/HGNC/hgnc_complete_set.txt"
         translations_table = pd.read_table(translations_file, sep="\t")
@@ -367,69 +393,55 @@ if __name__ == "__main__":
 
     ## OpenTarget
 
-    ### OpenTargets
-    if asked.open_targets:
+    ### OpenTargets Drug Molecule 
+    if asked.open_targets_drug_molecule:
         opt_loaded += 1
         logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
-        directory = asked.open_targets[0]
-        columns = ["id", "approvedSymbol", "approvedName", 'transcriptIds']
-        name = "open_targets"
+        directory = asked.open_targets_drug_molecule[0]
+        # columns = ["id", "approvedSymbol", "approvedName", 'transcriptIds']
+        name = "open_targets_drug_molecule"
+        
         local_nodes, local_edges = process_OT(
-            bc, directory, columns, name,
-            od.open_targets.OpenTargets
+            directory, 
+            name,
         )
+
         logging.info(f"OK, wove {name}: {len(local_nodes)} nodes and {len(local_edges)} edges.")
         nodes += local_nodes
         edges += local_edges
         logging.info(f"Done adapter {opt_loaded}/{opt_total}")
 
-    ### OpenTarget drugs
-    if asked.open_targets_drugs:
+    ### OpenTargets Drug Mechanims of Action 
+    if asked.open_targets_drug_mechanism_of_action:
         opt_loaded += 1
         logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
-        directory = asked.open_targets_drugs[0]
-        columns = ["id", 'name', 'isApproved', 'tradeNames', 'description']
-        name = "open_targets_drugs"
+        directory = asked.open_targets_drug_mechanism_of_action[0]
+        # columns = ["id", "approvedSymbol", "approvedName", 'transcriptIds']
+        name = "open_targets_drug_mechanism_of_action"
+        
         local_nodes, local_edges = process_OT(
-            bc, directory, columns, name,
-            od.open_targets_drugs.OpenTargetsDrugs
+            directory, 
+            name,
         )
+
         logging.info(f"OK, wove {name}: {len(local_nodes)} nodes and {len(local_edges)} edges.")
         nodes += local_nodes
         edges += local_edges
         logging.info(f"Done adapter {opt_loaded}/{opt_total}")
 
-    ### OpenTarget diseases
-    if asked.open_targets_diseases:
+    ### OpenTargets targets 
+    if asked.open_targets_target:
         opt_loaded += 1
         logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
-        directory = asked.open_targets_diseases[0]
-        columns = ['id', 'code', 'description', 'name']
-        name = "open_targets_diseases"
+        directory = asked.open_targets_target[0]
+        # columns = ["id", "approvedSymbol", "approvedName", 'transcriptIds']
+        name = "open_targets_target"
+        
         local_nodes, local_edges = process_OT(
-            bc, directory, columns, name,
-            od.open_targets_diseases.OpenTargetsDiseases
+            directory, 
+            name,
         )
-        logging.info(f"OK, wove {name}: {len(local_nodes)} nodes and {len(local_edges)} edges.")
-        nodes += local_nodes
-        edges += local_edges
-        logging.info(f"Done adapter {opt_loaded}/{opt_total}")
 
-    ### OpenTarget evidences
-    if asked.open_targets_evidences:
-        opt_loaded += 1
-        logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
-        directory = asked.open_targets_evidences[0]
-        columns = [
-            'datasourceId', 'targetId', 'clinicalPhase', 'clinicalStatus',
-            'diseaseFromSource', 'diseaseFromSourceMappedId', 'drugId',
-            'targetFromSource', 'urls', 'diseaseId', 'score', 'variantEffect'
-        ]
-        name = "open_targets_evidences"
-        local_nodes, local_edges = process_OT(
-            bc, directory, columns, name,
-            od.open_targets_evidences.OpenTargetsEvidences
-        )
         logging.info(f"OK, wove {name}: {len(local_nodes)} nodes and {len(local_edges)} edges.")
         nodes += local_nodes
         edges += local_edges
@@ -478,6 +490,7 @@ if __name__ == "__main__":
         "copy_number_amplifications_external",
         "oncokb",
         # "omnipath_networks",
+        # "ot-"
         "cgi",
     ]
     for name in direct_mappings:
