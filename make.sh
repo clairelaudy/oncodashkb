@@ -1,8 +1,16 @@
 #!/usr/bin/env bash
 
 if [[ -z "$1" ]] ; then
-    echo "ERROR, usage: $0 <DECIDER_data_version> [debug]" >&2
+    echo "ERROR, usage: $0 <DECIDER_data_version> [config]" >&2
     exit 2
+fi
+
+CONFIG="config/neo4j.yaml"
+if [[ -z "$2" ]] ; then
+    echo "Selecting Neo4j output configuration." >&2
+else
+    echo "Selecting output configuration: $2" >&2
+    CONFIG="$2"
 fi
 
 set -e
@@ -48,7 +56,7 @@ echo "Activate virtual environment..." >&2
 source $(dirname $(uv python find))/activate
 
 
-if [[ "$2" != "debug" ]] ; then
+if [[ "$2" == "config/neo4j.yaml" ]] ; then
     echo "Stop Neo4j server..." >&2
     neo_version=$(neo4j-admin --version | cut -d. -f 1)
     if [[ "$neo_version" -eq 4 ]]; then
@@ -62,6 +70,7 @@ fi
 echo "Weave data..." >&2
 
 cmd="uv run python3 ${py_args} $script_dir/weave.py \
+    --config $CONFIG \
     --clinical                              $data_dir/DECIDER/$data_version/clinical_export_2024-11-13.csv \
     --short-mutations-local                 $data_dir/DECIDER/$data_version/short_mutations_v4.10_local.csv \
     --short-mutations-external              $data_dir/DECIDER/$data_version/short_mutations_v4.10_external.csv  \
@@ -84,7 +93,7 @@ echo "$cmd" >&2
 $cmd > tmp.sh
 
 
-if [[ "$2" != "debug" ]] ; then
+if [[ "$2" == "config/neo4j.yaml" ]] ; then
     echo "Run import script..." >&2
     chmod a+x  $(cat tmp.sh)
     ${NEO_USER} $SHELL $(cat tmp.sh)

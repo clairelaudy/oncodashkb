@@ -166,6 +166,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=usage)
 
+    parser.add_argument("-C", "--config", metavar="FILE", default="config/neo4j.yaml",
+                        help="The BioCypher configuration to load [default: config/neo4j.yaml].")
+
     parser.add_argument("-i", "--clinical", metavar="CSV", nargs="+",
                         help="Extract from a clinical CSV file.")
 
@@ -236,8 +239,8 @@ if __name__ == "__main__":
 
     asked = parser.parse_args()
     bc = biocypher.BioCypher(
-        biocypher_config_path="config/biocypher_config.yaml",
-        schema_config_path="config/schema_config.yaml"
+        biocypher_config_path = asked.config,
+        schema_config_path = "config/schema.yaml"
     )
 
     logging.basicConfig()
