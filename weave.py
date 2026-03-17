@@ -34,8 +34,9 @@ from oncodashkb.transformers.networks import OmniPath_directed
 ontoweaver.transformer.register(OmniPath_directed)
 
 # Importing custom transformer for translating sample ids with publication code and registering it.
-from oncodashkb.transformers.specific_translate_transformers import translate_sample_ids
+from oncodashkb.transformers.specific_translate_transformers import translate_sample_ids, translate_cat_format
 ontoweaver.transformer.register(translate_sample_ids)
+ontoweaver.transformer.register(translate_cat_format)
 
 # Importing OpenTargets custom transformer and registering it.
 from oncodashkb.transformers.ot_transformers import access_proteins, urls_to_prop
@@ -153,6 +154,9 @@ if __name__ == "__main__":
     parser.add_argument("-cnae", "--copy-number-amplifications-external", metavar="CSV", nargs="+",
                         help="Extract from a CSV file with copy number amplifications' external annotations.")
 
+    parser.add_argument("-sv", "--structural-variants", metavar="CSV", nargs="+",
+                        help="Extract from a CSV file with short mutations' local annotations.")
+
     parser.add_argument("-o", "--oncokb", metavar="CSV", nargs="+",
                         help="Extract from an OncoKB CSV file.")
 
@@ -218,6 +222,7 @@ if __name__ == "__main__":
         "short_mutations_external",
         "copy_number_amplifications_local",
         "copy_number_amplifications_external",
+        "structural_variants",
         "oncokb",
         "omnipath_networks",
         "open_targets_target",
@@ -266,6 +271,53 @@ if __name__ == "__main__":
             type_affix="suffix",
             type_affix_sep=":",
             raise_errors = asked.debug
+        )
+
+        local_nodes = []
+        local_edges = []
+        with alive_bar(len(table), file=sys.stderr) as progress:
+            for n,e in adapter():
+                # NOTE: here, n & e are ontoweaver.base.Element, not BioCypher tuples.
+                local_nodes += n
+                local_edges += e
+                progress()
+
+        logging.info(f" |  | OK, wove: {len(local_nodes)} nodes, {len(local_edges)} edges.")
+        nodes += local_nodes
+        edges += local_edges
+        logging.info(f"Done adapter {opt_loaded}/{opt_total}")
+
+    if asked.structural_variants:
+        opt_loaded += 1
+        logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
+        data_file = asked.structural_variants[0]
+        mapping_file = "./oncodashkb/adapters/structural_variants.yaml"
+
+        # logging.info(f"Weave structural variants...")
+        logging.info(f" | Weave `{data_file}:{mapping_file}`...")
+        logging.info(f" |  | Load data `{data_file}`...")
+        table = pd.read_excel(data_file)
+
+        table = table.rename(columns={"Gene.type":"Gene_type"})
+
+        try:
+            with open(mapping_file) as fd:
+                ymapping = yaml.full_load(fd)
+        except Exception as e:
+            logging.error(e)
+            sys.exit(error_codes["CannotAccessFile"])
+
+        logging.info(f" |  | Process {mapping_file}...")
+
+        yparser = ontoweaver.mapping.YamlParser(ymapping)
+        mapping = yparser()
+
+        adapter = ontoweaver.tabular.PandasAdapter(
+            table,
+            *mapping,
+            type_affix="suffix",
+            type_affix_sep=":",
+            raise_errors = True
         )
 
         local_nodes = []
@@ -414,9 +466,8 @@ if __name__ == "__main__":
         "short_mutations_external",
         "copy_number_amplifications_local",
         "copy_number_amplifications_external",
+        # "structural_variants",
         "oncokb",
-        # "omnipath_networks",
-        # "ot-"
         "cgi",
     ]
     for name in direct_mappings:

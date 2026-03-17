@@ -84,6 +84,7 @@ cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --short-mutations-external              $decider_dir/short_mutations_external.csv  \
     --copy-number-amplifications-local      $decider_dir/cnas_local.csv \
     --copy-number-amplifications-external   $decider_dir/cnas_external.csv  \
+    --structural-variants                     $data_dir/DECIDER/$data_version/structural_variants.xlsx  \
     --omnipath-networks                     $data_dir/omnipath_networks/omnipath_webservice_interactions__latest.tsv.gz \
     --open-targets-drug-molecule            $data_dir/OT/drug_molecule/
     --open-targets-drug_mechanism_of_action $data_dir/OT/drug_mechanism_of_action/
