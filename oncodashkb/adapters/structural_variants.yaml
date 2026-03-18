@@ -25,18 +25,18 @@ transformers:
             - primary_gene
             - effect
         from_subject: sample
-        to_object: alteration
-        via_relation: sample_carries_alteration
+        to_object: structural_variant
+        via_relation: sample_carries_variant
         format_string: "{primary_gene}:{effect}"
     ## Gene status
     - translate_cat_format:
         columns:
           - primary_gene
           - Gene_type
-        from_subject: alteration
+        from_subject: structural_variant
         to_object: gene_status
         format_string: "{primary_gene}:{Gene_type}"
-        via_relation: alteration_causes_gene_status
+        via_relation: variant_causes_gene_status
         column_to_translate: 
             - primary_gene
         translations_file: data/HGNC/hgnc_complete_set.txt
@@ -60,7 +60,7 @@ transformers:
             - primary_gene
             - effect
         to_property: ensembl_id_alteration
-        for_object: alteration
+        for_object: structural_variant
         format_string: "{primary_gene}:{effect}"
         column_to_translate: 
             - primary_gene
@@ -89,26 +89,26 @@ transformers:
     - map:
         column: pathogenic
         to_property: oncogenic
-        for_object: alteration
+        for_object: structural_variant
     - map:
         column: effect
         to_property: consequence
-        for_object: alteration
+        for_object: structural_variant
     - map:
         column: Homogeneous
         to_property: homogenous
-        for_object: alteration
+        for_object: structural_variant
     - map:
         column: expressed
         to_property: expressed
-        for_object: alteration
+        for_object: structural_variant
     - string:
         value: " "
         to_property: edgelabel
         for_objects:
             - patient_carries_sample
-            - sample_carries_alteration
-            - alteration_causes_gene_status
+            - sample_carries_variant
+            - variant_causes_gene_status
             - gene_status_affects_gene
 
 metadata:
