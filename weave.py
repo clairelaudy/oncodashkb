@@ -299,6 +299,7 @@ if __name__ == "__main__":
         table = pd.read_excel(data_file)
 
         table = table.rename(columns={"Gene.type":"Gene_type"})
+        table["mutation"] = table.mutation.str.replace(r';', ',', regex=True)
 
         try:
             with open(mapping_file) as fd:
