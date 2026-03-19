@@ -85,10 +85,11 @@ cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --copy-number-amplifications-local      $decider_dir/cnas_local.csv \
     --copy-number-amplifications-external   $decider_dir/cnas_external.csv  \
     --structural-variants                     $data_dir/DECIDER/$data_version/structural_variants.xlsx  \
-    --omnipath-networks                     $data_dir/omnipath_networks/omnipath_webservice_interactions__latest.tsv.gz \
+    --omnipath-networks                       $data_dir/omnipath_networks/omnipath_webservice_interactions__latest.tsv.gz \
     --open-targets-drug-molecule            $data_dir/OT/drug_molecule/
     --open-targets-drug_mechanism_of_action $data_dir/OT/drug_mechanism_of_action/
     --open-targets-target                   $data_dir/OT/target/
+    --cgi                                     $data_dir/DECIDER/$data_version/treatments_cgi.csv \
     ${weave_args}" # \
     # --clinical                              $data_dir/DECIDER/clinical/clinical_export.xlsx \
     # --oncokb                     $data_dir/DECIDER/$data_version/treatments.csv \

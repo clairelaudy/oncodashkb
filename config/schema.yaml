@@ -241,6 +241,12 @@ protein:
         ncbi_tax_id: str
         data_source: str
 
+# Treatment
+
+treatment:
+    represented_as: node
+    input_label: treatment
+
 ########################
 # EDGES
 ########################
@@ -306,13 +312,17 @@ variant causes gene status:
 # as predictive markers for treatment response, 
 # based on clinical evidence categorized by evidence levels. 
 
-variant biomarker for drug:
-    is_a: biomarker for
+variant biomarker for treatment:
+    is_a: sequence variant modulates treatment association
     represented_as: edge
-    label_in_input: variant_biomarker_for_drug
+    label_in_input: variant_biomarker_for_treatment
     source: sequence variant
-    target: drug
+    target: treatment
     properties:
+        level_of_evidence: str
+        cgi_level: str
+        citations: str
+        tumorType: str
         data_source: str
         edglelabel: str
 
@@ -486,3 +496,11 @@ drug has target:
     label_in_input: drug_has_target
     properties:
         data_source: str
+
+treatment has part drug:
+    is_a: association
+    represented_as: edge
+    label_in_input: treatment_has_part_drug
+    properties:
+        data_source: str
+
