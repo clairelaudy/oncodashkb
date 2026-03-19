@@ -80,6 +80,10 @@ transformers:
         to_property: gene_symbol_gene_status
         for_object: gene_status
         format_string: "{hugoSymbol}:{gene_role}"
+    - map:
+        columns: gene_role
+        to_property: gene_role
+        for_object: gene_status
     ## Genes
     - map: 
         column: hugoSymbol
