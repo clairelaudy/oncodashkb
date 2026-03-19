@@ -65,7 +65,7 @@ echo "Activate virtual environment..." >&2
 source $(dirname $(uv python find))/activate
 
 
-if [[ "$2" == "config/neo4j.yaml" ]] ; then
+if [[ "$CONFIG" == "config/neo4j.yaml" ]] ; then
     echo "Stop Neo4j server..." >&2
     neo_version=$(neo4j-admin --version | cut -d. -f 1)
     if [[ "$neo_version" -eq 4 ]]; then
