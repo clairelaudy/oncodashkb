@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 
+CONFIG="config/neo4j.yaml"
 if [[ -z "$1" ]] ; then
-    echo "ERROR, usage: $0 <DECIDER_data_version> [config]" >&2
+    echo "ERROR, usage: $0 <DECIDER_data_dir> [config] [debug]" >&2
+    echo "    config defaults to: $CONFIG" >&2
     exit 2
 fi
 
-CONFIG="config/neo4j.yaml"
 if [[ -z "$2" ]] ; then
     echo "Selecting Neo4j output configuration." >&2
 elif [[ "$2" == "debug" ]] ; then
-    echo "ERROR, if DEBUG MODE, usage: $0 <DECIDER_data_version> <config> debug" >&2
+    echo "ERROR, if DEBUG MODE, usage: $0 <DECIDER_data_dir> <config> debug" >&2
     exit 2
 else
     echo "Selecting output configuration: $2" >&2
@@ -19,8 +20,14 @@ fi
 set -e
 set -o pipefail
 
+decider_dir="$1"
 data_dir="data"
-data_version="$1"
+if [[ "$3" == "debug" ]] ; then
+    echo "DEBUG MODE" >&2
+    data_dir="data_debug"
+    decider_dir="data_debug/DECIDER/debug"
+fi
+
 script_dir="$(dirname $0)"
 
 case "$(uname)" in
@@ -49,9 +56,8 @@ fi
 py_args="-O" # Optimize = remove asserts and optimize bytecode.
 weave_args="-v INFO" # Default, for having clean progress bars.
 if [[ "$3" == "debug" ]] ; then
-    echo "DEBUG MODE" >&2
     py_args=""
-    weave_args="-v DEBUG"
+    weave_args="--debug -v DEBUG"
 fi
 
 
@@ -74,14 +80,14 @@ echo "Weave data..." >&2
 
 cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --config $CONFIG \
-    --short-mutations-local             $data_dir/DECIDER/$data_version/short_mutations_local.csv  \
-    --short-mutations-external              $data_dir/DECIDER/$data_version/short_mutations_external.csv  \
-    --copy-number-amplifications-local      $data_dir/DECIDER/$data_version/cnas_local.csv \
-    --copy-number-amplifications-external   $data_dir/DECIDER/$data_version/cnas_external.csv  \
+    --short-mutations-local                 $decider_dir/short_mutations_local.csv  \
+    --short-mutations-external              $decider_dir/short_mutations_external.csv  \
+    --copy-number-amplifications-local      $decider_dir/cnas_local.csv \
+    --copy-number-amplifications-external   $decider_dir/cnas_external.csv  \
     --omnipath-networks                     $data_dir/omnipath_networks/omnipath_webservice_interactions__latest.tsv.gz \
-    --open-targets-drug-molecule              $data_dir/OT/drug_molecule/
-    --open-targets-drug_mechanism_of_action   $data_dir/OT/drug_mechanism_of_action/
-    --open-targets-target                     $data_dir/OT/target/
+    --open-targets-drug-molecule            $data_dir/OT/drug_molecule/
+    --open-targets-drug_mechanism_of_action $data_dir/OT/drug_mechanism_of_action/
+    --open-targets-target                   $data_dir/OT/target/
     ${weave_args}" # \
     # --clinical                              $data_dir/DECIDER/clinical/clinical_export.xlsx \
     # --gene_ontology_genes        $data_dir/DECIDER/$data_version/OncoKB_gene_symbols.conf \
@@ -89,6 +95,7 @@ cmd="uv run python3 ${py_args} $script_dir/weave.py \
     # --gene_ontology              $data_dir/GO/goa_human.gaf.gz \
     # --gene_ontology_owl          $data_dir/GO/go.owl \
     # --gene_ontology_reverse
+
 
 echo "Weaving command:" >&2
 echo "$cmd" >&2

@@ -86,7 +86,7 @@ def process_OT(directory, name):
         parquet_files = [os.path.join(directory, f) for f in os.listdir(directory) if f.endswith('.parquet')]
         logging.info(f" |  | Concatenating {len(parquet_files)} parquet files...")
         df = pd.concat([pd.read_parquet(file) for file in parquet_files])
-        
+
         logging.debug(f"COLUMNS: {df.columns}")
 
         logging.info(f" |  | Read {name} mapping...")
@@ -111,7 +111,7 @@ def process_OT(directory, name):
             *mapping,
             type_affix="suffix",
             type_affix_sep=":",
-            raise_errors = True
+            raise_errors = asked.debug
         )
 
         local_nodes = []
@@ -192,7 +192,7 @@ if __name__ == "__main__":
 
     parser.add_argument("-on", "--omnipath-networks", metavar="TSV", nargs="+",
                         help="Extract from the Omnipath networks TSV file.")
-    
+
     parser.add_argument("-ott", "--open-targets-target", metavar="PARQUET", nargs="+",
                         help="Extract parquet files containing targets from the given directory.")
 
@@ -201,7 +201,7 @@ if __name__ == "__main__":
 
     parser.add_argument("-otdm", "--open-targets-drug-molecule", metavar="PARQUET", nargs="+",
                         help="Extract parquet files containing molecule from the given directory.")
-    
+
     parser.add_argument("-c", "--cgi", metavar="CSV", nargs="+",
                         help="Extract from a CGI CSV file.")
 
@@ -222,6 +222,9 @@ if __name__ == "__main__":
 
     parser.add_argument("-im", "--import-script-run", action="store_true",
                         help=f"If passed, it will call the import scripts created byBioCypher for you. ")
+
+    parser.add_argument("--debug", action="store_true",
+                        help=f"If passed, stops on any error.")
 
 
     levels = {
@@ -312,7 +315,7 @@ if __name__ == "__main__":
             *mapping,
             type_affix="suffix",
             type_affix_sep=":",
-            raise_errors = True
+            raise_errors = asked.debug
         )
 
         local_nodes = []
@@ -368,7 +371,7 @@ if __name__ == "__main__":
             *mapping,
             type_affix="suffix",
             type_affix_sep=":",
-            raise_errors = True
+            raise_errors = asked.debug
         )
 
         local_nodes = []
@@ -389,16 +392,16 @@ if __name__ == "__main__":
 
     ## OpenTarget
 
-    ### OpenTargets Drug Molecule 
+    ### OpenTargets Drug Molecule
     if asked.open_targets_drug_molecule:
         opt_loaded += 1
         logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
         directory = asked.open_targets_drug_molecule[0]
         # columns = ["id", "approvedSymbol", "approvedName", 'transcriptIds']
         name = "open_targets_drug_molecule"
-        
+
         local_nodes, local_edges = process_OT(
-            directory, 
+            directory,
             name,
         )
 
@@ -407,16 +410,16 @@ if __name__ == "__main__":
         edges += local_edges
         logging.info(f"Done adapter {opt_loaded}/{opt_total}")
 
-    ### OpenTargets Drug Mechanims of Action 
+    ### OpenTargets Drug Mechanims of Action
     if asked.open_targets_drug_mechanism_of_action:
         opt_loaded += 1
         logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
         directory = asked.open_targets_drug_mechanism_of_action[0]
         # columns = ["id", "approvedSymbol", "approvedName", 'transcriptIds']
         name = "open_targets_drug_mechanism_of_action"
-        
+
         local_nodes, local_edges = process_OT(
-            directory, 
+            directory,
             name,
         )
 
@@ -425,16 +428,16 @@ if __name__ == "__main__":
         edges += local_edges
         logging.info(f"Done adapter {opt_loaded}/{opt_total}")
 
-    ### OpenTargets targets 
+    ### OpenTargets targets
     if asked.open_targets_target:
         opt_loaded += 1
         logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
         directory = asked.open_targets_target[0]
         # columns = ["id", "approvedSymbol", "approvedName", 'transcriptIds']
         name = "open_targets_target"
-        
+
         local_nodes, local_edges = process_OT(
-            directory, 
+            directory,
             name,
         )
 
@@ -475,7 +478,7 @@ if __name__ == "__main__":
     ### Copy number amplifications
 
     ## Other
-    ### OmniPath Networks 
+    ### OmniPath Networks
     ### OncoKB
     ### CGI
 
@@ -519,7 +522,7 @@ if __name__ == "__main__":
             *mapping,
             type_affix="suffix",
             type_affix_sep=":",
-            raise_errors = True
+            raise_errors = asked.debug
         )
 
         logging.info(f" |  | Transform data...")

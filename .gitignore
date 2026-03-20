@@ -10,6 +10,8 @@ tmp.sh
 import.report
 
 data
+data_debug
+prepare.log
 
 .venv
 poetry.lock
