@@ -1,28 +1,75 @@
 #!/usr/bin/env bash
 
 if [[ -z "$1" ]] ; then
-    echo "ERROR, usage: $0 <DECIDER_data_version>" >&2
+    echo "ERROR, usage: $0 <DECIDER_data_dir>" >&2
     exit 2
 fi
 
-set -eu
-set -o pipefail
+set -e
+#set -o pipefail
 
 data_dir="data"
-data_version="$1"
+decider_dir="$1"
+log_file="prepare.log"
+echo "" > $log_file
+log=$(realpath $log_file)
 
 script_dir="$(dirname $0)"
 
+error_handler() {
+    local line_number=$1
+    local error_code=$2
+    local command="$3"
 
-echo "# Check for neo4j.pass..." >&2
+    echo " └ERROR at line $line_number, failed with code $error_code" >&2
+    echo "Full logs:" >&2
+    echo "----------8<----------" >&2
+    cat $log >&2
+    echo "----------8<----------" >&2
+    echo "ERROR ($error_code) in $0:$line_number, faulty command:" >&2
+    echo "$command" >&2
+}
+
+trap 'error_handler ${LINENO} $? "$BASH_COMMAND"' ERR
+
+
+download() {
+    URL="$1"
+    FILE="$2"
+
+    TO_FILE=""
+    if [[ -n "$FILE" ]] ; then
+        if [[ -f $FILE ]] ; then
+            TO_FILE="--output $FILE --time-cond $FILE"
+        else
+            TO_FILE="--output $FILE"
+        fi
+    else
+        TO_FILE="--remote-name"
+    fi
+
+    cmd="curl --write-out %{filename_effective} $TO_FILE $URL"
+    echo $cmd &>> $log
+    FILENAME=$($cmd 2>> $log)
+
+    if [[ -s" $FILENAME" ]] ; then
+        echo "'$FILENAME' has data" >> $log
+    else
+        echo "ERROR: '$(realpath $FILENAME)' has no data" >&2
+        exit 3
+    fi
+}
+
+
+echo "Check for neo4j.pass..." >&2
 if [[ ! -f neo4j.pass ]] ; then
     echo "File: neo4j.pass is missing." >&2
     exit 1
 fi
-echo "neo4j — OK" >&2
+echo " └OK" >&2
 
 
-echo "# Check dependencies..." >&2
+echo "Check dependencies..." >&2
 REQUIRED_CMD="gzip"
 for p in $REQUIRED_CMD ; do
     if ! command -v $p > /dev/null ; then
@@ -31,142 +78,183 @@ for p in $REQUIRED_CMD ; do
     fi
 done
 
-
 if [[ -d $script_dir/.venv ]] ; then
-    echo "Environment already existing, if you want to upgrade it, either:" >&2
-    echo "  * remove the '.venv' directory and run 'prepare.sh' again," >&2
-    echo "  * or run 'uv sync' manually." >&2
+    echo " │ Environment already existing, if you want to upgrade it, either:" >&2
+    echo " │   - remove the '.venv' directory and run 'prepare.sh' again," >&2
+    echo " │   - or run 'uv sync' manually." >&2
 else
-    echo "Install environment..." >&2
-    uv sync --no-upgrade
-    echo "Sync — OK" >&2
+    echo " │ Install environment..." >&2
+    uv sync --no-upgrade &>> $log
+    echo " │  └OK" >&2
 fi
+echo " └OK" >&2
 
 
-echo "# Download data:" >&2
+echo "Download data..." >&2
 mkdir -p data
 cd data
 
-echo "## Gene Ontology..." >&2
-mkdir -p GO
+echo " │ Gene Ontology..." >&2
+mkdir -p GO &>> $log
 cd GO
-wget --no-clobber https://current.geneontology.org/annotations/goa_human.gaf.gz
+download https://current.geneontology.org/annotations/goa_human.gaf.gz
 # gunzip goa_human.gaf.gz
-wget --no-clobber https://purl.obolibrary.org/obo/go.owl
+download https://purl.obolibrary.org/obo/go.owl
 cd ..
-echo "## GO — OK" >&2
+echo " │  └OK" >&2
 
 
-echo " | Open Targets..." >&2
+echo " │ Open Targets..." >&2
 rsync_cmd="rsync --ignore-existing -rpltvz --delete"
 ot_version="25.12"
 mkdir -p OT
 cd OT
-echo " | | Target..." >&2
-$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/target .
 
-echo " | | Drug-Mechanism..." >&2
-$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/drug_mechanism_of_action .
+echo " │ │ Target..." >&2
+$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/target . &>> $log
+echo " │ │  └OK" >&2
 
-echo " | | Drug-Molecule..." >&2
-$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/drug_molecule .
+echo " │ │ Drug-Mechanism..." >&2
+$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/drug_mechanism_of_action . &>> $log
+echo " │ │  └OK" >&2
 
-echo " | OK" >&2
+echo " │ │ Drug-Molecule..." >&2
+$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/drug_molecule . &>> $log
+echo " │ │  └OK" >&2
+
+cd ..  # Out of OT/
+echo " │ └OK" >&2
 
 
-echo " | OmniPath Networks..." >&2
+echo " │ OmniPath Networks..." >&2
 mkdir -p omnipath_networks
 cd omnipath_networks
-wget https://archive.omnipathdb.org/omnipath_webservice_interactions__latest.tsv.gz
+download https://archive.omnipathdb.org/omnipath_webservice_interactions__latest.tsv.gz
 cd ..
-echo " | OmniPath Networks — OK" >&2
+echo " │  └OK" >&2
 
 
-echo " | Gene Symbol to Ensembl ID" >&2
+echo " │ Gene Symbol to Ensembl ID" >&2
 mkdir -p HGNC
 cd HGNC
-wget https://storage.googleapis.com/public-download-files/hgnc/tsv/tsv/hgnc_complete_set.txt
+download https://storage.googleapis.com/public-download-files/hgnc/tsv/tsv/hgnc_complete_set.txt
 cd ..
-echo " | Gene Symbol to Ensemble ID dataframe — OK" >&2
+echo " │  └OK" >&2
 
+cd ..  # Back to project root.
+echo " └OK" >&2
 
-echo "# Check DECIDER data..." >&2
+echo "Check DECIDER data..." >&2
 check() {
-    if [[ ! -f "$data_dir/DECIDER/$data_version/$1" ]] ; then
-        echo "File: $data_dir/DECIDER/$data_version/$1 is missing." >&2
+    if [[ ! -f "$1" ]] ; then
+        echo "File: $1 is missing." >&2
         exit 1
     fi
 }
-
-if [[ -d $data_dir/DECIDER ]] ; then
-    cd DECIDER
-    # check genomics_oncokbannotation.csv
-    # check genomics_cgimutation.csv
-    # check genomics_cgidrugprescriptions.csv
-    # check genomics_cgicopynumberalteration.csv
-    # check clin_overview_clinicaldata.csv
-    # check ../../oncodashkb/adapters/Hugo_Symbol_genes.conf
-    # check treatments.csv
-    # check snv_annotated.csv
-    # check OncoKB_gene_symbols.conf
-    # check cna_annotated.csv
-    check clinical_export.csv
-    check snv_local.csv
-    check snv_external.csv
-    check cna_local.csv
-    check cna_external.csv
-    cd ..
+declare -a decider_files=(
+    $decider_dir/short_mutations_local.csv
+    $decider_dir/short_mutations_external.csv
+    $decider_dir/cnas_local.csv
+    $decider_dir/cnas_external.csv
+)
+if [[ -d "$decider_dir" ]] ; then
+    for f in ${decider_files[@]}; do
+        check $f
+    done
+    check $data_dir/DECIDER/clinical/clinical_export.xlsx
 else
-    echo "The $data_dir/DECIDER directory is missing." >&2
+    echo "The '$decider_dir' directory does not exists." >&2
     exit 1
 fi
 # cp -a ../oncodashkb/adapters/Hugo_Symbol_genes.conf .
-echo "DECIDER — OK" >&2
+echo " └OK" >&2
 
-echo "Downloading OmniPath mapping files and custom transformers" >&2
-cd ..
+echo "Download third-party source code..."
 cd oncodashkb
-mkdir transformers
-cd transformers
-wget -L https://raw.githubusercontent.com/njmmatthieu/omnipath-secondary-adapter/refs/heads/directed/src/omnipath_secondary_adapter/transformers/networks.py -O networks.py
-echo "OmniPath Networks custom transformer saved." >&2
-cd ..
-cd adapters
-wget -L https://raw.githubusercontent.com/njmmatthieu/omnipath-secondary-adapter/refs/heads/directed/src/omnipath_secondary_adapter/adapters/networks.yaml -O omnipath_networks.yaml
-echo "OmniPath Networks mapping file saved." >&2
-cd ../..
 
-echo "Downloading OpenTargets mapping files and custom transformers" >&2
-cd ..
-cd oncodashkb
+echo " │ OmniPath networks transformer..." >&2
+mkdir -p transformers
 cd transformers
-wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/ot-transformers.py -O ot_transformers.py
-echo "Open Targets custom transformers saved." >&2
+download https://raw.githubusercontent.com/njmmatthieu/omnipath-secondary-adapter/refs/heads/directed/src/omnipath_secondary_adapter/transformers/networks.py networks.py
 cd ..
-cd adapters
-wget -L raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/target.yaml -O open_targets_target.yaml
-echo "Open Targets targets mapping file saved." >&2
-wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_mechanism_of_action.yaml -O open_targets_drug_mechanism_of_action.yaml
-echo "Open Targets mechanisms of action mapping file saved." >&2
-wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_molecule.yaml -O open_targets_drug_molecule.yaml
-echo "Open Targets Drug mapping file saved." >&2
-cd ../..
+echo " │  └OK" >&2
 
-echo "Downloading OpenTargets mapping files and custom transformers" >&2
+echo " │ OmniPath networks adapter..." >&2
+cd adapters
+download https://raw.githubusercontent.com/njmmatthieu/omnipath-secondary-adapter/refs/heads/directed/src/omnipath_secondary_adapter/adapters/networks.yaml omnipath_networks.yaml
 cd ..
-cd oncodashkb
+echo " │  └OK" >&2
+
+echo " │ OpenTargets Drug-Target Indications..." >&2
+echo " │  │ Custom transformers..." >&2
 cd transformers
-wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/ot-transformers.py -O ot_transformers.py
-echo "Open Targets custom transformers saved." >&2
+download https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/ot-transformers.py ot_transformers.py
 cd ..
-cd adapters
-wget -L raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/target.yaml -O ot_target.yaml
-echo "Open Targets targets mapping file saved." >&2
-wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_mechanism_of_action.yaml -O ot_drug_mechanism_of_action.yaml
-echo "Open Targets mechanisms of action mapping file saved." >&2
-wget -L https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_molecule.yaml -O ot_drug_molecule.yaml
-echo "Open Targets Drug mapping file saved." >&2
-cd ../..
+echo " │  │  └OK" >&2
 
+echo " │  │ Targets adapter..." >&2
+cd adapters
+download https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/target.yaml open_targets_target.yaml
+cd ..
+echo " │  │  └OK" >&2
+
+echo " │  │ Drug adapter..." >&2
+cd adapters
+download https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_mechanism_of_action.yaml open_targets_drug_mechanism_of_action.yaml
+cd ..
+echo " │  │  └OK" >&2
+
+echo " │  │ Molecules adapter..." >&2
+cd adapters
+download https://raw.githubusercontent.com/njmmatthieu/opentargets-dti/refs/heads/for_oncodashkb/adapters/drug_molecule.yaml open_targets_drug_molecule.yaml
+cd ..
+echo " │  │  └OK" >&2
+
+cd ..  # Out of the subdir oncodashkb
+echo " │  └OK" >&2
+echo " └OK" >&2
+
+
+echo "Create a smaller debuging data set in data_debug/..." >&2
+lines=100
+echo " │ DECIDER..." >&2
+mkdir -p data_debug
+mkdir -p data_debug/DECIDER/debug/
+for f in ${decider_files[@]}; do
+    head -n $lines $f > data_debug/DECIDER/debug/$(basename $f)
+done
+cp data/DECIDER/clinical/clinical_export.xlsx data_debug/DECIDER/debug
+echo " │  └OK" >&2
+
+echo " │ GO & HGNC..." >&2
+mkdir -p data_debug/GO
+cp data/GO/go.owl data_debug/GO/
+
+mkdir -p data_debug/HGNC
+cp data/HGNC/hgnc_complete_set.txt data_debug/HGNC/
+echo " │  └OK" >&2
+
+echo " │ OpenTargets..." >&2
+mkdir -p data_debug/OT
+declare -a ot_dirs=(
+    "drug_mechanism_of_action"
+    "drug_molecule"
+    "target"
+)
+for d in ${ot_dirs[@]}; do
+    echo " │  │ $d..." >&2
+    mkdir -p data_debug/OT/$d
+    # Only the first parquet file
+    cp data/OT/$d/part-00000* data_debug/OT/$d/
+    echo " │  │  └OK" >&2
+done
+echo " │  └OK" >&2
+
+echo " │ OmniPath..." >&2
+mkdir -p data_debug/omnipath_networks
+zcat data/omnipath_networks/omnipath_webservice_interactions__latest.tsv.gz | head -n $lines | gzip > data_debug/omnipath_networks/omnipath_webservice_interactions__latest.tsv.gz
+echo " │  └OK" >&2
+echo " └OK" >&2
 
 echo "Everything is OK, you can now call: ./make.sh." >&2
+
