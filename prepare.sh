@@ -49,7 +49,7 @@ download() {
     fi
 
     cmd="curl --write-out %{filename_effective} $TO_FILE $URL"
-    # echo "$cmd" &>> $log
+    # echo "$cmd" 2>&1 >> $log
     FILENAME=$($cmd 2>> $log)
 
     if [[ -s "$FILENAME" ]] ; then
@@ -84,7 +84,7 @@ if [[ -d $script_dir/.venv ]] ; then
     echo " │   - or run 'uv sync' manually." >&2
 else
     echo " │ Install environment..." >&2
-    uv sync --no-upgrade &>> $log
+    uv sync --no-upgrade 2>&1 >> $log
     echo " │  └OK" >&2
 fi
 echo " └OK" >&2
@@ -95,7 +95,7 @@ mkdir -p data
 cd data
 
 echo " │ Gene Ontology..." >&2
-mkdir -p GO &>> $log
+mkdir -p GO 2>&1 >> $log
 cd GO
 download https://current.geneontology.org/annotations/goa_human.gaf.gz
 # gunzip goa_human.gaf.gz
@@ -111,15 +111,15 @@ mkdir -p OT
 cd OT
 
 echo " │ │ Target..." >&2
-$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/target . &>> $log
+$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/target . 2>&1 >> $log
 echo " │ │  └OK" >&2
 
 echo " │ │ Drug-Mechanism..." >&2
-$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/drug_mechanism_of_action . &>> $log
+$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/drug_mechanism_of_action . 2>&1 >> $log
 echo " │ │  └OK" >&2
 
 echo " │ │ Drug-Molecule..." >&2
-$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/drug_molecule . &>> $log
+$rsync_cmd rsync.ebi.ac.uk::pub/databases/opentargets/platform/${ot_version}/output/drug_molecule . 2>&1 >> $log
 echo " │ │  └OK" >&2
 
 cd ..  # Out of OT/
@@ -252,7 +252,7 @@ echo " │  └OK" >&2
 
 echo " │ OmniPath..." >&2
 mkdir -p data_debug/omnipath_networks
-zcat data/omnipath_networks/omnipath_webservice_interactions__latest.tsv.gz | head -n $lines | gzip > data_debug/omnipath_networks/omnipath_webservice_interactions__latest.tsv.gz
+gunzip --to-stdout data/omnipath_networks/omnipath_webservice_interactions__latest.tsv.gz | head -n $lines | gzip > data_debug/omnipath_networks/omnipath_webservice_interactions__latest.tsv.gz
 echo " │  └OK" >&2
 echo " └OK" >&2
 
