@@ -49,10 +49,10 @@ download() {
     fi
 
     cmd="curl --write-out %{filename_effective} $TO_FILE $URL"
-    echo $cmd &>> $log
+    # echo "$cmd" &>> $log
     FILENAME=$($cmd 2>> $log)
 
-    if [[ -s" $FILENAME" ]] ; then
+    if [[ -s "$FILENAME" ]] ; then
         echo "'$FILENAME' has data" >> $log
     else
         echo "ERROR: '$(realpath $FILENAME)' has no data" >&2
@@ -70,7 +70,7 @@ echo " └OK" >&2
 
 
 echo "Check dependencies..." >&2
-REQUIRED_CMD="gzip"
+REQUIRED_CMD="gzip zcat curl rsync head"
 for p in $REQUIRED_CMD ; do
     if ! command -v $p > /dev/null ; then
         echo "Package '$p' is missing, please install it." >&2
