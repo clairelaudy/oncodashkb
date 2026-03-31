@@ -78,6 +78,8 @@ fi
 
 echo "Weave data..." >&2
 
+echo "CONFIG = $CONFIG" >&2
+
 cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --config $CONFIG \
     --short-mutations-local                 $decider_dir/short_mutations_local.csv  \
