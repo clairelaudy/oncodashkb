@@ -78,6 +78,8 @@ fi
 
 echo "Weave data..." >&2
 
+echo "CONFIG = $CONFIG" >&2
+
 cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --omnipath-networks                     $data_dir/omnipath_networks/subset_omnipath_networks_different_type_entity_type_source_and_entity_type_target_shorter.tsv \
     --config $CONFIG \
