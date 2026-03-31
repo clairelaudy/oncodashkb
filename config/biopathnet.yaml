@@ -14,6 +14,6 @@ biopathnet:
   entity_names_file_stem: entity_names
   background_graph_file_stem: brg
   skg_file_stem: skg
-  targeted_relation: "(alteration, variant_biomarker_for_treatment, drug)"
+  targeted_relation: "(drug, drug has target, gene)"
   include_properties: False
 
