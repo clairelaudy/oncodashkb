@@ -80,6 +80,8 @@ fi
 
 echo "Weave data..." >&2
 
+echo "CONFIG = $CONFIG" >&2
+
 cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --config $CONFIG \
     --clinical                              $data_dir/DECIDER/clinical/clinical_export.xlsx \
