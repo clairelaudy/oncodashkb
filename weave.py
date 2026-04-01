@@ -77,7 +77,7 @@ def progress_read(filename, hint=None, steps=100, estimate_lines=10, **kwargs):
 def process_OT(directory, name):
     logging.info(f" | Weave Open Targets {name}...")
 
-    conf_filename = f"oncodashkb/adapters/{name}.yaml"
+    mapping_file = f"oncodashkb/adapters/{name}.yaml"
 
     logging.debug(f"DIRECTORY {directory}")
 
@@ -91,7 +91,7 @@ def process_OT(directory, name):
 
         logging.info(f" |  | Read {name} mapping...")
         try:
-            with open(conf_filename) as fd:
+            with open(mapping_file) as fd:
                 ymapping = yaml.full_load(fd)
         except Exception as e:
             logging.error(e)
@@ -101,7 +101,7 @@ def process_OT(directory, name):
         #     for n,e in manager():
         #         progress()
 
-        logging.info(f" |  | Process {conf_filename}...")
+        logging.info(f" |  | Process {mapping_file}...")
 
         yparser = ontoweaver.mapping.YamlParser(ymapping)
         mapping = yparser()

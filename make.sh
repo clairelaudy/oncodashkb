@@ -80,17 +80,17 @@ echo "Weave data..." >&2
 
 cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --config $CONFIG \
-    --copy-number-amplifications-external   $decider_dir/cnas_external.csv  \
     --short-mutations-local                 $decider_dir/short_mutations_local.csv  \
     --short-mutations-external              $decider_dir/short_mutations_external.csv  \
-    --structural-variants                   $decider_dir/structural_variants.xlsx  \
     --copy-number-amplifications-local      $decider_dir/cnas_local.csv \
+    --copy-number-amplifications-external   $decider_dir/cnas_external.csv  \
+    --structural-variants                   $decider_dir/structural_variants.xlsx  \
+    --cgi                                   $decider_dir/treatments_cgi.csv \
     --omnipath-networks                     $data_dir/omnipath_networks/omnipath_webservice_interactions__latest.tsv.gz \
     --open-targets-drug-molecule            $data_dir/OT/drug_molecule/
     --open-targets-drug_mechanism_of_action $data_dir/OT/drug_mechanism_of_action/
     --open-targets-target                   $data_dir/OT/target/
     ${weave_args}" # \
-    # --cgi                                   $decider_dir/treatments_cgi.csv \
     # --clinical                              $data_dir/DECIDER/clinical/clinical_export.xlsx \
     # --oncokb                     $data_dir/DECIDER/$data_version/treatments.csv \
 
