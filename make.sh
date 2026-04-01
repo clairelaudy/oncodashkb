@@ -79,17 +79,17 @@ fi
 echo "Weave data..." >&2
 
 cmd="uv run python3 ${py_args} $script_dir/weave.py \
-    --omnipath-networks                     $data_dir/omnipath_networks/subset_omnipath_networks_different_type_entity_type_source_and_entity_type_target_shorter.tsv \
     --config $CONFIG \
+    --copy-number-amplifications-external   $decider_dir/cnas_external.csv  \
+    --short-mutations-local                 $decider_dir/short_mutations_local.csv  \
+    --short-mutations-external              $decider_dir/short_mutations_external.csv  \
+    --structural-variants                   $decider_dir/structural_variants.xlsx  \
+    --copy-number-amplifications-local      $decider_dir/cnas_local.csv \
+    --omnipath-networks                     $data_dir/omnipath_networks/omnipath_webservice_interactions__latest.tsv.gz \
+    --open-targets-drug-molecule            $data_dir/OT/drug_molecule/
+    --open-targets-drug_mechanism_of_action $data_dir/OT/drug_mechanism_of_action/
+    --open-targets-target                   $data_dir/OT/target/
     ${weave_args}" # \
-    # --copy-number-amplifications-external   $decider_dir/cnas_external.csv  \
-    # --short-mutations-local                 $decider_dir/short_mutations_local.csv  \
-    # --short-mutations-external              $decider_dir/short_mutations_external.csv  \
-    # --copy-number-amplifications-local      $decider_dir/cnas_local.csv \
-    # --structural-variants                   $decider_dir/structural_variants.xlsx  \
-    # --open-targets-drug-molecule            $data_dir/OT/drug_molecule/
-    # --open-targets-drug_mechanism_of_action $data_dir/OT/drug_mechanism_of_action/
-    # --open-targets-target                   $data_dir/OT/target/
     # --cgi                                   $decider_dir/treatments_cgi.csv \
     # --clinical                              $data_dir/DECIDER/clinical/clinical_export.xlsx \
     # --oncokb                     $data_dir/DECIDER/$data_version/treatments.csv \
