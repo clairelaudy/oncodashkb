@@ -28,13 +28,11 @@ transformers:
     - boolean:
         column: Expressed
         to_property: expressed
-        for_object: copy_number_amplification
+        for_object: sample_carries_variant 
         consider_true:
             - 1.0
-        output_true: True
         consider_false:
             - 0.0
-        output_false: False
     # - map:
     #     column: referenceGenome
     #     to_property: reference_genome

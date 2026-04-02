@@ -29,22 +29,30 @@ transformers:
         column: ExonicFunc
         to_property: consequence
         for_object: short_mutation
-    - map:
+    - boolean:
         column: Homogeneous
         to_property: homogenous
-        for_object: short_mutation
+        for_object: sample_carries_variant
+        consider_true:
+            - True
+        consider_false:
+            - False
     - map:
         column: refCount
         to_property: refCount
-        for_object: short_mutation
+        for_object: sample_carries_variant
     - map:
         column: altCount
         to_property: altCount
-        for_object: short_mutation
-    - map:
+        for_object: sample_carries_variant
+    - boolean:
         column: Expressed
         to_property: expressed
-        for_object: short_mutation
+        for_object: sample_carries_variant
+        consider_true:
+            - True
+        consider_false:
+            - False
     - string:
         value: " "
         to_property: edgelabel
