@@ -1,6 +1,6 @@
 row:
     translate:
-        column: patient_id
+        column: patient
         to_subject: patient
         translations_file: ./data/DECIDER/clinical/clinical_export.xlsx
         translate_from: Patient card::Patient cohort code_Patient Card
@@ -11,7 +11,7 @@ transformers:
     # Nodes
     ## Sample
     - translate_sample_ids :
-        column: sample_id
+        column: sample
         to_object: sample
         via_relation: patient_carries_sample
         translations_file: ./data/DECIDER/clinical/clinical_export.xlsx
@@ -20,78 +20,79 @@ transformers:
         index_col: 0
         usecols: [0,1,2]
     ## Alteration
-    - map:
-        column: alteration
-        from_subject: sample
-        to_object: short_mutation
-        via_relation: sample_carries_variant
-    ## Gene Stauts
     - cat_format:
         columns:
-          - ensembl_id
-          - gene_role
+            - Gene
+            - Mutation
+        from_subject: sample
+        to_object: short_mutation
+        format_string: "{Gene}:{Mutation}"
+        via_relation: sample_carries_variant
+    ## Gene Status
+    - translate_cat_format:
+        columns:
+          - Gene
+          - Gene_type
         from_subject: short_mutation
         to_object: gene_status
-        format_string: "{ensembl_id}:{gene_role}"
+        format_string: "{Gene}:{Gene_type}"
         via_relation: variant_causes_gene_status
+        column_to_translate: 
+            - Gene
+        translations_file: data/HGNC/hgnc_complete_set.txt
+        translate_from: symbol
+        translate_to: ensembl_gene_id
+        sep: "\t"
     ## Genes
-    - map:
-        column: ensembl_id
+    - translate:
+        column: Gene
         from_subject: gene_status
         to_object: gene
         via_relation: gene_status_affects_gene
+        translations_file: data/HGNC/hgnc_complete_set.txt
+        translate_from: symbol
+        translate_to: ensembl_gene_id
+        sep: "\t"
     # Properties
     ## Gene Stauts
     - cat_format:
         columns:
-          - hugoSymbol
-          - gene_role
+          - Gene
+          - Gene_type
         to_property: gene_symbol_gene_status
         for_object: gene_status
-        format_string: "{hugoSymbol}:{gene_role}"
+        format_string: "{Gene}:{Gene_type}"
     - map:
-        columns: gene_role
-        to_property: gene_role
+        columns: Gene_type
+        to_property: Gene_type
         for_object: gene_status
     ## Genes
     - map:
-        column: hugoSymbol
+        column: Gene
         to_property: gene_symbol
         for_object: gene
         via_relation: gene_status_affects_gene
     ## Alterations
     - map:
-        column: tumorType
-        to_property: tumor_type
-        for_object: short_mutation
-    - map:
-        column: consequence
-        to_property: consequence
-        for_object: short_mutation
-    - map:
-        column: oncogenic
+        column: Pathogenic
         to_property: oncogenic
         for_object: short_mutation
-    - replace:
-        column: mutationEffectDescription
-        to_property: mutation_effect_description
-        for_object: short_mutation
-    - map:
-        column: citationPMids
-        to_property: citation_PM_ids
-        for_object: short_mutation
-    - replace:
-        column: geneSummary
-        to_property: gene_summary
-        for_object: gene
-    - map:
-        column: variantSummary
-        to_property: variant_summary
-        for_object: short_mutation
-    - map:
-        column: tumorTypeSummary
-        to_property: tumor_type_summary
-        for_object: short_mutation
+    # - replace:
+    #     column: mutationEffectDescription
+    #     to_property: mutation_effect_description
+    #     for_object: short_mutation
+    # - map:
+    #     column: citationPMids
+    #     to_property: citation_PM_ids
+    #     for_object: short_mutation
+    # - replace:
+    #     column: geneSummary
+    #     to_property: gene_summary
+    #     for_object: gene
+    # - map:
+    #     column: variantSummary
+    #     to_property: variant_summary
+    #     for_object: short_mutation
     - string:
         value: " "
         to_property: edgelabel
