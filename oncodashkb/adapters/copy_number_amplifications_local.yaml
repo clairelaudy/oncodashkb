@@ -1,6 +1,6 @@
 row:
     translate:
-        column: patient_id
+        column: patient
         to_subject: patient
         translations_file: ./data/DECIDER/clinical/clinical_export.xlsx
         translate_from: Patient card::Patient cohort code_Patient Card
@@ -9,7 +9,7 @@ row:
         usecols: [0,1,2]
 transformers:
     - translate_sample_ids :
-        column: sample_id
+        column: sample
         to_object: sample
         via_relation: patient_carries_sample
         translations_file: ./data/DECIDER/clinical/clinical_export.xlsx
@@ -19,19 +19,30 @@ transformers:
         usecols: [0,1,2]
     - cat_format:
         columns:
-            - hugoSymbol
-            - alteration
+            - Gene
+            # - alteration
         from_subject: sample
         to_object: copy_number_amplification
-        format_string: "{hugoSymbol}:{alteration}"
+        format_string: "{Gene}:AMPLIFICATION"
         via_relation: sample_carries_variant
-    - map:
-        column: referenceGenome
-        to_property: reference_genome
+    - boolean:
+        column: Expressed
+        to_property: expressed
         for_object: copy_number_amplification
-    - map:
-        column: tumorType
-        to_property: tumor_type
-        for_object: copy_number_amplification
+        consider_true:
+            - 1.0
+        output_true: True
+        consider_false:
+            - 0.0
+        output_false: False
+    # - map:
+    #     column: referenceGenome
+    #     to_property: reference_genome
+    #     for_object: copy_number_amplification
+    # - map:
+    #     column: tumorType
+    #     to_property: tumor_type
+    #     for_object: copy_number_amplification
+
 metadata:
         - data_source: copy_number_amplifications_local
