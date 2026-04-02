@@ -1,6 +1,6 @@
 row:
     translate:
-        column: patient_id
+        column: patient
         to_subject: patient
         translations_file: ./data/DECIDER/clinical/clinical_export.xlsx
         translate_from: Patient card::Patient cohort code_Patient Card
@@ -11,7 +11,7 @@ transformers:
     # Nodes
     ## Samples
     - translate_sample_ids :
-        column: sample_id
+        column: sample
         to_object: sample
         via_relation: patient_carries_sample
         translations_file: ./data/DECIDER/clinical/clinical_export.xlsx
@@ -26,46 +26,60 @@ transformers:
     ## Alterations
     - cat_format:
         columns:
-            - hugoSymbol
-            - alteration
+            - Gene
+            # - alteration
         from_subject: sample
         to_object: copy_number_amplification
         via_relation: sample_carries_variant
-        format_string: "{hugoSymbol}:{alteration}"
+        format_string: "{Gene}:AMPLIFICATION"
     ## Gene status
-    - cat_format:
-        columns:
-          - ensembl_id
-          - gene_role
-        from_subject: copy_number_amplification
-        to_object: gene_status
-        format_string: "{ensembl_id}:{gene_role}"
-        via_relation: variant_causes_gene_status
+    # - cat_format:
+    #     columns:
+    #       - ensembl_id
+    #       - gene_role
+    #     from_subject: copy_number_amplification
+    #     to_object: gene_status
+    #     format_string: "{ensembl_id}:{gene_role}"
+    #     via_relation: variant_causes_gene_status
         # column_to_translate: 
         #     - hugoSymbol
         # translations_file: data/HGNC/hgnc_complete_set.txt
         # translate_from: symbol
         # translate_to: ensembl_gene_id
         # sep: "\t"
+    - translate_cat_format:
+        columns:
+          - Gene
+        #   - Gene_type
+        from_subject: copy_number_amplification
+        to_object: gene_status
+        format_string: "{Gene}:gain"
+        via_relation: variant_causes_gene_status
+        column_to_translate: 
+            - Gene
+        translations_file: data/HGNC/hgnc_complete_set.txt
+        translate_from: symbol
+        translate_to: ensembl_gene_id
+        sep: "\t"
     ## Genes
-    - map:
-        column: ensembl_id
+    - translate:
+        column: Gene
         from_subject: gene_status
         to_object: gene
         via_relation: gene_status_affects_gene
-        # translations_file: data/HGNC/hgnc_complete_set.txt
-        # translate_from: symbol
-        # translate_to: ensembl_gene_id
-        # sep: "\t"
+        translations_file: data/HGNC/hgnc_complete_set.txt
+        translate_from: symbol
+        translate_to: ensembl_gene_id
+        sep: "\t"
     # Properties
     ## Alterations
-    - cat_format:
-        columns:
-            - ensembl_id
-            - alteration
-        to_property: ensembl_id_alteration
-        for_object: copy_number_amplification
-        format_string: "{ensembl_id}:{alteration}"
+    # - cat_format:
+    #     columns:
+    #         - ensembl_id
+    #         - alteration
+    #     to_property: ensembl_id_alteration
+    #     for_object: copy_number_amplification
+    #     format_string: "{ensembl_id}:{alteration}"
         # column_to_translate: 
         #     - hugoSymbol
         # translations_file: data/HGNC/hgnc_complete_set.txt
@@ -75,49 +89,49 @@ transformers:
     ## Gene status
     - cat_format:
         columns:
-            - hugoSymbol
-            - gene_role
+            - Gene
+            # - gene_role
         to_property: gene_symbol_gene_status
         for_object: gene_status
-        format_string: "{hugoSymbol}:{gene_role}"
-    - map:
-        columns: gene_role
+        format_string: "{Gene}:gain"
+    - string:
+        value: "AMPLIFICATION"
         to_property: gene_role
         for_object: gene_status
     ## Genes
     - map: 
-        column: hugoSymbol
+        column: Gene
         to_property: gene_symbol
         for_object: gene
     ## Alterations
+    # - map:
+    #     column: tumorType
+    #     to_property: tumor_type
+    #     for_object: copy_number_amplification
     - map:
-        column: tumorType
-        to_property: tumor_type
-        for_object: copy_number_amplification
-    - map:
-        column: oncogenic
+        column: Pathogenic
         to_property: oncogenic
         for_object: copy_number_amplification
-    - replace:
-        column: mutationEffectDescription
-        to_property: mutation_effect_description
-        for_object: copy_number_amplification
-    - map:
-        column: citationPMids
-        to_property: citation_PM_ids
-        for_object: copy_number_amplification
-    - replace:
-        column: geneSummary
-        to_property: gene_summary
-        for_object: gene
-    - map:
-        column: variantSummary
-        to_property: variant_summary
-        for_object: copy_number_amplification
-    - map:
-        column: tumorTypeSummary
-        to_property: tumor_type_summary
-        for_object: copy_number_amplification
+    # - replace:
+    #     column: mutationEffectDescription
+    #     to_property: mutation_effect_description
+    #     for_object: copy_number_amplification
+    # - map:
+    #     column: citationPMids
+    #     to_property: citation_PM_ids
+    #     for_object: copy_number_amplification
+    # - replace:
+    #     column: geneSummary
+    #     to_property: gene_summary
+    #     for_object: gene
+    # - map:
+    #     column: variantSummary
+    #     to_property: variant_summary
+    #     for_object: copy_number_amplification
+    # - map:
+    #     column: tumorTypeSummary
+    #     to_property: tumor_type_summary
+    #     for_object: copy_number_amplification
     - string:
         value: " "
         to_property: edgelabel
