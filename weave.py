@@ -365,6 +365,45 @@ if __name__ == "__main__":
         edges += local_edges
         logging.info(f"Done adapter {opt_loaded}/{opt_total}")
 
+    if asked.copy_number_amplifications_local:
+        opt_loaded += 1
+        logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
+        data_file = asked.copy_number_amplifications_local[0]
+
+        logging.info(f" |  | Load data `{data_file}`...")
+        table = pd.read_excel(data_file)
+
+        local_nodes, local_edges = process_DECIDER_xlsx(
+            table,
+            name="copy_number_amplifications_local",
+        )
+
+        logging.info(f" |  | OK, wove: {len(local_nodes)} nodes, {len(local_edges)} edges.")
+        nodes += local_nodes
+        edges += local_edges
+        logging.info(f"Done adapter {opt_loaded}/{opt_total}")
+
+    if asked.copy_number_amplifications_external:
+        opt_loaded += 1
+        logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
+        data_file = asked.copy_number_amplifications_external[0]
+
+        logging.info(f" |  | Load data `{data_file}`...")
+        table = pd.read_excel(data_file)
+
+        table = table.rename(columns={"Gene.type":"Gene_type"})
+        # table["mutation"] = table.mutation.str.replace(r';', ',', regex=True)
+
+        local_nodes, local_edges = process_DECIDER_xlsx(
+            table,
+            name="copy_number_amplifications_external",
+        )
+
+        logging.info(f" |  | OK, wove: {len(local_nodes)} nodes, {len(local_edges)} edges.")
+        nodes += local_nodes
+        edges += local_edges
+        logging.info(f"Done adapter {opt_loaded}/{opt_total}")
+
     if asked.structural_variants:
         opt_loaded += 1
         logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
@@ -565,8 +604,8 @@ if __name__ == "__main__":
     direct_mappings = [
         # "short_mutations_local",
         # "short_mutations_external",
-        "copy_number_amplifications_local",
-        "copy_number_amplifications_external",
+        # "copy_number_amplifications_local",
+        # "copy_number_amplifications_external",
         # "structural_variants",
         "oncokb",
         # "cgi",
