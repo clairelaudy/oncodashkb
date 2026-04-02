@@ -64,14 +64,13 @@ transformers:
         format_string: "{Gene}:{Gene_type}"
     - map:
         columns: Gene_type
-        to_property: Gene_type
+        to_property: gene_role
         for_object: gene_status
     ## Genes
     - map:
         column: Gene
         to_property: gene_symbol
         for_object: gene
-        via_relation: gene_status_affects_gene
     ## Alterations
     - map:
         column: Pathogenic
