@@ -136,7 +136,8 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description=usage)
 
-    parser.add_argument("-C", "--config", metavar="FILE", default="config/neo4j.yaml",
+    parser.add_argument("-C", "--config", metavar="FILE", default=["config/neo4j.yaml"],
+                        action="append",
                         help="The BioCypher configuration to load [default: config/neo4j.yaml].")
 
     parser.add_argument("-i", "--clinical", metavar="CSV", nargs="+",
@@ -197,10 +198,6 @@ if __name__ == "__main__":
                         help="Set the verbose level (default: %(default)s).")
 
     asked = parser.parse_args()
-    bc = biocypher.BioCypher(
-        biocypher_config_path = asked.config,
-        schema_config_path = "config/schema.yaml"
-    )
 
     logging.basicConfig()
     logging.getLogger().setLevel(asked.verbose)
@@ -670,17 +667,26 @@ if __name__ == "__main__":
     # Export the final SKG.
     ###################################################
 
-    logging.info(f"Write the final SKG into files...")
-    if fnodes:
-        bc.write_nodes(n.as_tuple() for n in fnodes)
-    if fedges:
-        bc.write_edges(e.as_tuple() for e in fedges)
-    #bc.summary()
-    import_file = bc.write_import_call()
-    logging.info(f"OK, wrote files.")
+    configs = asked.config
 
-    # Print on stdout for other scripts to get.
-    print(import_file)
+    for config in configs:
+        logging.info(f"Write the final SKG into {config} files...")
+        
+        bc = biocypher.BioCypher(
+            biocypher_config_path = config,
+            schema_config_path = "config/schema.yaml"
+        )
+        
+        if fnodes:
+            bc.write_nodes(n.as_tuple() for n in fnodes)
+        if fedges:
+            bc.write_edges(e.as_tuple() for e in fedges)
+        #bc.summary()
+        import_file = bc.write_import_call()
+        logging.info(f"OK, wrote files.")
+
+        # Print on stdout for other scripts to get.
+        print(import_file)
 
     if asked.import_script_run:
         shell = os.environ["SHELL"]
