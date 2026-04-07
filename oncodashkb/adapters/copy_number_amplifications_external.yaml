@@ -19,10 +19,6 @@ transformers:
         translate_to: Patient card::Publication code
         index_col: 0
         usecols: [0,1,2]
-    # - map :
-    #     column: sample_id
-    #     to_object: sample
-    #     via_relation: patient_carries_sample
     ## Alterations
     - cat_format:
         columns:
@@ -47,20 +43,14 @@ transformers:
         # translate_from: symbol
         # translate_to: ensembl_gene_id
         # sep: "\t"
-    - translate_cat_format:
+    - cat_format:
         columns:
-          - Gene
-        #   - Gene_type
-        from_subject: copy_number_amplification
-        to_object: gene_status
-        format_string: "{Gene}:gain"
-        via_relation: variant_causes_gene_status
-        column_to_translate: 
             - Gene
-        translations_file: data/HGNC/hgnc_complete_set.txt
-        translate_from: symbol
-        translate_to: ensembl_gene_id
-        sep: "\t"
+            # - gene_role
+        to_object: gene_status
+        from_subject: copy_number_amplification
+        via_relation: variant_causes_gene_status
+        format_string: "{Gene}:GoF"
     ## Genes
     - translate:
         column: Gene
@@ -87,15 +77,22 @@ transformers:
         # translate_to: ensembl_gene_id
         # sep: "\t"
     ## Gene status
-    - cat_format:
-        columns:
-            - Gene
-            # - gene_role
-        to_property: gene_symbol_gene_status
-        for_object: gene_status
-        format_string: "{Gene}:gain"
+    # - translate_cat_format:
+    #     columns:
+    #       - Gene
+    #     #   - Gene_type
+    #     from_subject: copy_number_amplification
+    #     to_object: gene_status
+    #     format_string: "{Gene}:GoF"
+    #     via_relation: variant_causes_gene_status
+    #     column_to_translate: 
+    #         - Gene
+    #     translations_file: data/HGNC/hgnc_complete_set.txt
+    #     translate_from: symbol
+    #     translate_to: ensembl_gene_id
+    #     sep: "\t"
     - string:
-        value: "AMPLIFICATION"
+        value: "GoF"
         to_property: gene_role
         for_object: gene_status
     ## Genes
