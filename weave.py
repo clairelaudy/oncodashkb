@@ -73,7 +73,7 @@ def progress_read(filename, hint=None, steps=100, estimate_lines=10, **kwargs):
 
     return df
 
-def process_DECIDER_xlsx(table, name):
+def process_table(table, name):
     logging.info(f" | Weave DECIDER {name}...")
 
     mapping_file = f"oncodashkb/adapters/{name}.yaml"
@@ -199,6 +199,9 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--oncokb", metavar="CSV", nargs="+",
                         help="Extract from an OncoKB CSV file.")
 
+    parser.add_argument("-ogs", "--oncokb-gene-status", metavar="CSV", nargs="+",
+                        help="Extract from an OncoKB CSV file, at the level of the gene status.")
+
     parser.add_argument("-on", "--omnipath-networks", metavar="TSV", nargs="+",
                         help="Extract from the Omnipath networks TSV file.")
 
@@ -263,6 +266,7 @@ if __name__ == "__main__":
         "copy_number_amplifications_external",
         "structural_variants",
         "oncokb",
+        "oncokb_gene_status",
         "omnipath_networks",
         "open_targets_target",
         "open_targets_drug_mechanism_of_action",
@@ -334,7 +338,7 @@ if __name__ == "__main__":
         logging.info(f" |  | Load data `{data_file}`...")
         table = pd.read_excel(data_file)
 
-        local_nodes, local_edges = process_DECIDER_xlsx(
+        local_nodes, local_edges = process_table(
             table,
             name="short_mutations_local",
         )
@@ -355,7 +359,7 @@ if __name__ == "__main__":
         table = table.rename(columns={"Gene.type":"Gene_type"})
         # table["mutation"] = table.mutation.str.replace(r';', ',', regex=True)
 
-        local_nodes, local_edges = process_DECIDER_xlsx(
+        local_nodes, local_edges = process_table(
             table,
             name="short_mutations_external",
         )
@@ -373,7 +377,7 @@ if __name__ == "__main__":
         logging.info(f" |  | Load data `{data_file}`...")
         table = pd.read_excel(data_file)
 
-        local_nodes, local_edges = process_DECIDER_xlsx(
+        local_nodes, local_edges = process_table(
             table,
             name="copy_number_amplifications_local",
         )
@@ -394,7 +398,7 @@ if __name__ == "__main__":
         table = table.rename(columns={"Gene.type":"Gene_type"})
         # table["mutation"] = table.mutation.str.replace(r';', ',', regex=True)
 
-        local_nodes, local_edges = process_DECIDER_xlsx(
+        local_nodes, local_edges = process_table(
             table,
             name="copy_number_amplifications_external",
         )
@@ -416,7 +420,7 @@ if __name__ == "__main__":
         table = table.rename(columns={"Gene.type":"Gene_type"})
         table["mutation"] = table.mutation.str.replace(r';', ',', regex=True)
 
-        local_nodes, local_edges = process_DECIDER_xlsx(
+        local_nodes, local_edges = process_table(
             table,
             name = "structural_variants",
         )
@@ -427,52 +431,41 @@ if __name__ == "__main__":
         logging.info(f"Done adapter {opt_loaded}/{opt_total}")
 
 
-    if asked.cgi:
+    if asked.oncokb_gene_status:
         opt_loaded += 1
         logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
-        data_file = asked.cgi[0]
-        mapping_file = "./oncodashkb/adapters/cgi.yaml"
+        data_file = asked.oncokb_gene_status[0]
 
-        # logging.info(f"Weave structural variants...")
-        logging.info(f" | Weave `{data_file}:{mapping_file}`...")
         logging.info(f" |  | Load data `{data_file}`...")
-        table = progress_read(data_file, hint=72648)
+        table = progress_read(data_file, hint=1430)
 
-        table["treatment"] = table.treatment.str.upper().str.replace(r'\([^()]*\)', '', regex=True)
+        # Replace "." by "_" in column names
+        table = table.rename(columns={"okb.drug":"okb_drug", 
+                                      "fda.level":"fda_level", 
+                                      "Cancer.Types":"Cancer_Types"})
+        table_okb = table[~table["fda_level"].isna()]
+        table_okb = table_okb.drop(["drugType", 
+                                    "drugProteinRelation", 
+                                    "proteinTarget", 
+                                    "targetENSG", 
+                                    "geneProteinRelation", 
+                                    "maximumClinicalTrialPhase", 
+                                    "yearOfFirstApproval", 
+                                    "isApproved"], 
+                                    axis=1).drop_duplicates()
+        # Change to upper case and remove parentheses and things inside
+        table_okb["Drugs"] = table_okb.Drugs.str.upper().str.replace(r'\([^()]*\)', '', regex=True)
 
-        try:
-            with open(mapping_file) as fd:
-                ymapping = yaml.full_load(fd)
-        except Exception as e:
-            logging.error(e)
-            sys.exit(error_codes["CannotAccessFile"])
-
-        logging.info(f" |  | Process {mapping_file}...")
-
-        yparser = ontoweaver.mapping.YamlParser(ymapping)
-        mapping = yparser()
-
-        adapter = ontoweaver.tabular.PandasAdapter(
-            table,
-            *mapping,
-            type_affix="suffix",
-            type_affix_sep=":",
-            raise_errors = True
+        local_nodes, local_edges = process_table(
+            table_okb,
+            name = "oncokb_gene_status",
         )
-
-        local_nodes = []
-        local_edges = []
-        with alive_bar(len(table), file=sys.stderr) as progress:
-            for n,e in adapter():
-                # NOTE: here, n & e are ontoweaver.base.Element, not BioCypher tuples.
-                local_nodes += n
-                local_edges += e
-                progress()
 
         logging.info(f" |  | OK, wove: {len(local_nodes)} nodes, {len(local_edges)} edges.")
         nodes += local_nodes
         edges += local_edges
         logging.info(f"Done adapter {opt_loaded}/{opt_total}")
+
 
     if asked.omnipath_networks:
         opt_loaded += 1
@@ -607,7 +600,7 @@ if __name__ == "__main__":
         # "copy_number_amplifications_local",
         # "copy_number_amplifications_external",
         # "structural_variants",
-        "oncokb",
+        # "oncokb",
         # "cgi",
     ]
     for name in direct_mappings:
