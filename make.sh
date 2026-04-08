@@ -82,6 +82,7 @@ echo "Weave data..." >&2
 
 cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --config $CONFIG \
+    --clinical                              $data_dir/DECIDER/clinical/clinical_export.xlsx \
     --short-mutations-local                 $decider_dir/snv_placeholder.xlsx  \
     --short-mutations-external              $decider_dir/snv_placeholder.xlsx  \
     --copy-number-amplifications-local      $decider_dir/amp_placeholder.xlsx \
@@ -94,7 +95,6 @@ cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --open-targets-target                   $data_dir/OT/target/
     ${weave_args}" # \
     # --cgi                                   $decider_dir/treatments_cgi.csv \
-    # --clinical                              $data_dir/DECIDER/clinical/clinical_export.xlsx \
 
 
 echo "Weaving command:" >&2
