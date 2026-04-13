@@ -283,8 +283,6 @@ transformers:
         to_property:
         for_object: patient
 
-
-
     # - map:
     #     column: survival
     #     to_property: survival
