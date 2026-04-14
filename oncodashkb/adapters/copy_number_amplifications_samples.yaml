@@ -1,0 +1,21 @@
+row:
+    map:
+        column: sample
+        to_subject: sample
+transformers:
+    - map:
+        column: ploidy
+        to_property: ploidy
+        for_object: sample
+    - map:
+        column: ssite
+        to_property: tumor_site
+        for_object: sample
+    - map:
+        column: stime
+        to_property: sample_time
+        for_object: sample
+    - map:
+        column: sside
+        to_property: sample_type
+        for_object: sample

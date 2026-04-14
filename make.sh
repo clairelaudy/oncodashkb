@@ -83,8 +83,10 @@ echo "Weave data..." >&2
 cmd="uv run python3 ${py_args} $script_dir/weave.py \
     --config $CONFIG \
     --clinical                              $data_dir/DECIDER/clinical/clinical_export.xlsx \
+    --short-mutations-samples               $decider_dir/snv_placeholder.xlsx  \
     --short-mutations-local                 $decider_dir/snv_placeholder.xlsx  \
     --short-mutations-external              $decider_dir/snv_placeholder.xlsx  \
+    --copy-number-amplifications-samples    $decider_dir/amp_placeholder.xlsx \
     --copy-number-amplifications-local      $decider_dir/amp_placeholder.xlsx \
     --copy-number-amplifications-external   $decider_dir/amp_placeholder.xlsx  \
     --structural-variants                   $decider_dir/brk_placeholder.xlsx  \
@@ -113,7 +115,8 @@ if [[ "$CONFIG" == "config/neo4j.yaml" ]] ; then
     sleep 5
 
     echo "Send a test query..." >&2
-    ${NEO_USER} cypher-shell --username neo4j --database oncodash --password $(cat neo4j.pass) "MATCH (p:Patient) RETURN p LIMIT 20;"
+    # ${NEO_USER} cypher-shell --username neo4j --database oncodash --password $(cat neo4j.pass) "MATCH (p:Patient)-[e]->(s:Sample) RETURN p,e,s LIMIT 10;"
+    ${NEO_USER} cypher-shell --username neo4j --database oncodash --password $(cat neo4j.pass) "MATCH (p:Patient)-[pcs]->(s:Sample)-[scv]->(v:SequenceVariant) RETURN pcs,scv LIMIT 10;"
 fi
 
 echo "Done" >&2

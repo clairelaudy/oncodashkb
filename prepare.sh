@@ -154,7 +154,7 @@ echo " └OK" >&2
 
 cd $decider_dir
 
-ln -sf NETWORK_OT_OKB_filtered_2024_12_17.csv oncokb_gene_status_info.xlsx
+ln -sf NETWORK_OT_OKB_filtered_2024_12_17.csv oncokb_gene_status_info.csv
 ln -sf ./../clinical/12122025_Clinical_export_DECIDER_collab.xlsx ./../clinical/clinical_export.xlsx
 
 cd -
@@ -164,7 +164,7 @@ cd -
 echo "Check DECIDER data..." >&2
 check() {
     if [[ ! -f "$1" ]] ; then
-        echo "File: $1 is missing." >&2
+        echo "Missing file: $1" >&2
         exit 1
     fi
 }
@@ -172,7 +172,7 @@ declare -a decider_files=(
     $decider_dir/snv_placeholder.xlsx
     $decider_dir/amp_placeholder.xlsx
     $decider_dir/brk_placeholder.xlsx
-    $decider_dir/oncokb_gene_status_info.xlsx
+    $decider_dir/oncokb_gene_status_info.csv
 )
 if [[ -d "$decider_dir" ]] ; then
     for f in ${decider_files[@]}; do

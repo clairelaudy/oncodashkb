@@ -181,11 +181,17 @@ if __name__ == "__main__":
     parser.add_argument("-i", "--clinical", metavar="CSV", nargs="+",
                         help="Extract from a clinical CSV file.")
 
+    parser.add_argument("-sms", "--short-mutations-samples", metavar="CSV", nargs="+",
+                        help="Extract from a CSV file with short mutations' samples.")
+
     parser.add_argument("-sml", "--short-mutations-local", metavar="CSV", nargs="+",
                         help="Extract from a CSV file with short mutations' local annotations.")
 
     parser.add_argument("-sme", "--short-mutations-external", metavar="CSV", nargs="+",
                         help="Extract from a CSV file with short mutations' variants external annotations.")
+
+    parser.add_argument("-cnas", "--copy-number-amplifications-samples", metavar="CSV", nargs="+",
+                        help="Extract from a CSV file with copy number amplifications' samples.")
 
     parser.add_argument("-cnal", "--copy-number-amplifications-local", metavar="CSV", nargs="+",
                         help="Extract from a CSV file with copy number amplifications' local annotations.")
@@ -260,8 +266,10 @@ if __name__ == "__main__":
 
     all_options = [
         "clinical",
+        "short_mutations_samples",
         "short_mutations_local",
         "short_mutations_external",
+        "copy_number_amplifications_samples",
         "copy_number_amplifications_local",
         "copy_number_amplifications_external",
         "structural_variants",
@@ -358,6 +366,24 @@ if __name__ == "__main__":
         edges += local_edges
         logging.info(f"Done adapter {opt_loaded}/{opt_total}")
 
+    if asked.short_mutations_samples:
+        opt_loaded += 1
+        logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
+        data_file = asked.short_mutations_samples[0]
+
+        logging.info(f" |  | Load data `{data_file}`...")
+        table = pd.read_excel(data_file)
+
+        local_nodes, local_edges = process_table(
+            table,
+            name="short_mutations_samples",
+        )
+
+        logging.info(f" |  | OK, wove: {len(local_nodes)} nodes, {len(local_edges)} edges.")
+        nodes += local_nodes
+        edges += local_edges
+        logging.info(f"Done adapter {opt_loaded}/{opt_total}")
+
     if asked.short_mutations_external:
         opt_loaded += 1
         logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
@@ -372,6 +398,24 @@ if __name__ == "__main__":
         local_nodes, local_edges = process_table(
             table,
             name="short_mutations_external",
+        )
+
+        logging.info(f" |  | OK, wove: {len(local_nodes)} nodes, {len(local_edges)} edges.")
+        nodes += local_nodes
+        edges += local_edges
+        logging.info(f"Done adapter {opt_loaded}/{opt_total}")
+
+    if asked.copy_number_amplifications_samples:
+        opt_loaded += 1
+        logging.info(f"########## Adapter #{opt_loaded}/{opt_total} ##########")
+        data_file = asked.copy_number_amplifications_samples[0]
+
+        logging.info(f" |  | Load data `{data_file}`...")
+        table = pd.read_excel(data_file)
+
+        local_nodes, local_edges = process_table(
+            table,
+            name="copy_number_amplifications_samples",
         )
 
         logging.info(f" |  | OK, wove: {len(local_nodes)} nodes, {len(local_edges)} edges.")
