@@ -82,10 +82,14 @@ transformers:
         to_property: gene_symbol
         for_object: gene
     ## Alterations
-    - map:
+    - boolean:
         column: Pathogenic
         to_property: oncogenic
         for_object: short_mutation
+        consider_true:
+            - True
+        consider_false:
+            - False
     # - replace:
     #     column: mutationEffectDescription
     #     to_property: mutation_effect_description

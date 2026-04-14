@@ -105,10 +105,14 @@ transformers:
     #     column: tumorType
     #     to_property: tumor_type
     #     for_object: copy_number_amplification
-    - map:
+    - boolean:
         column: Pathogenic
         to_property: oncogenic
         for_object: copy_number_amplification
+        consider_true:
+            - True
+        consider_false:
+            - False
     # - replace:
     #     column: mutationEffectDescription
     #     to_property: mutation_effect_description

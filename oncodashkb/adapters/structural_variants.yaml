@@ -108,10 +108,14 @@ transformers:
         to_property: gene_symbol
         for_object: gene
     ## Alterations
-    - map:
+    - boolean:
         column: pathogenic
         to_property: oncogenic
         for_object: structural_variant
+        consider_true:
+            - True
+        consider_false:
+            - False
     - map:
         column: effect
         to_property: consequence

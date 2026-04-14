@@ -14,7 +14,7 @@ short mutation:
         homogenous: str
         mutation_effect_description: str
         data_source: str
-        oncogenic: str
+        oncogenic: bool
         reference_genome: str
         tumor_type: str
         tumor_type_summary: str
@@ -31,7 +31,7 @@ copy number amplification:
         homogenous: str
         mutation_effect_description: str
         data_source: str
-        oncogenic: str
+        oncogenic: bool
         reference_genome: str
         tumor_type: str
         tumor_type_summary: str
@@ -48,7 +48,7 @@ structural variant:
         homogenous: str
         mutation_effect_description: str
         data_source: str
-        oncogenic: str
+        oncogenic: bool
         reference_genome: str
         tumor_type: str
         tumor_type_summary: str
